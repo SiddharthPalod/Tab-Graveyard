@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Graveyard",
+  "version": "1.0.0",
+  "description": "Silent observer for tab tracking.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "sessions",
+    "alarms",
+    "unlimitedStorage"
+  ],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Tombstone"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"
+  }
+}

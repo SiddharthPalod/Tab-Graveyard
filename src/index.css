@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* ── Undertale Design Tokens ────────────────────────────────────────────────
+   Tailwind v4 reads custom tokens from @theme.
+   This is the single source of truth for all colors and fonts.
+   Change a value here → it propagates via text-ut-*, bg-ut-* across the app.
+ ────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-ut-bg:      #0d0d0f;   /* off-black — easier on eyes than #000 */
+  --color-ut-text:    #e8e6e1;   /* warm off-white — less glare than #fff */
+  --color-ut-soul:    #e83a1f;   /* slightly desaturated soul red */
+  --color-ut-lv:      #f5e642;   /* warm yellow — not pure #ffff00 */
+  --color-ut-orange:  #f09030;   /* battle orange — softened */
+  --color-ut-hpRed:   #9e1a1a;   /* deep damage red */
+  --color-ut-alive:   #3dba6f;   /* muted green */
+  --color-ut-dust:    #c9a227;   /* warm amber dust */
+  --color-ut-cobweb:  #d4652a;   /* earthy cobweb orange */
+  --color-ut-buried:  #8a8a96;   /* muted slate gray */
+  --color-ut-muted:   #2a2a30;   /* subtle dark border / separator */
+
+  /* Fonts */
+  --font-pixel:    'Press Start 2P', monospace;
+  --font-dialogue: 'VT323', monospace;
+
+  /* Popup dimensions */
+  --width-popup:  420px;
+  --height-popup: 550px;
+}
+
+/* ── Base reset ───────────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    margin: 0;
+    width: 420px;
+    max-height: 550px;
+    overflow: hidden;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+  }
+
+  /* Undertale-style vertical-only scrollbar */
+  ::-webkit-scrollbar       { width: 6px; height: 0; }
+  ::-webkit-scrollbar-track { background: #0d0d0f; border-left: 1px solid #2a2a30; }
+  ::-webkit-scrollbar-thumb { background: #e8e6e1; }
+  ::-webkit-scrollbar-thumb:hover { background: #f5e642; }
+}
