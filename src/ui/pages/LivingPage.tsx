@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { cls, QUOTES } from '../tokens';
+import { QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
 import { BehavioralMirror } from '../components/BehavioralMirror';
 import type { TabArchetype, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
+import { DialogueBox, PixelPanel, PixelButton, TypewriterText } from '../components/RPGPrimitives';
+import { IconGhost, IconErect } from '../components/GameIcons';
 
 interface LivingPageProps {
   tabs:        TabViewModel[];
@@ -38,20 +40,22 @@ export const LivingPage: React.FC<LivingPageProps> = ({
 
   if (loading) {
     return (
-      <div className={`${cls.box} p-5 text-center font-dialogue text-[15px] text-ut-lv`}>
-        {QUOTES.checkingDust}
-      </div>
+      <DialogueBox className="text-center text-rpg-yellow">
+        <TypewriterText text={QUOTES.checkingDust} />
+      </DialogueBox>
     );
   }
 
   if (tabs.length === 0) {
     return (
-      <div className={`${cls.box} p-5 text-center space-y-1.5`}>
-        <p className="text-2xl">👻</p>
-        <p className="font-dialogue text-[15px]">
-          {searchQuery ? QUOTES.noResults : QUOTES.emptyLiving}
+      <DialogueBox className="text-center space-y-2">
+        <div className="flex justify-center text-rpg-mid-gray">
+          <IconGhost className="text-4xl" />
+        </div>
+        <p className="text-rpg-white">
+          <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyLiving} />
         </p>
-      </div>
+      </DialogueBox>
     );
   }
 
@@ -89,54 +93,53 @@ export const LivingPage: React.FC<LivingPageProps> = ({
       <BehavioralMirror archetypes={archetypes} actions={actions} />
 
       {/* Catacombs Collapse Action Bar */}
-      <div className={`${cls.card} p-1.5 mb-1.5 bg-black/60`}>
+      <PixelPanel className="p-2 mb-2 !border-rpg-white !bg-rpg-bg">
         {namingOpen ? (
-          <div className="space-y-1">
-            <p className="font-pixel text-[7.5px] text-ut-lv">
+          <div className="space-y-2">
+            <p className="font-pixel text-[8px] text-rpg-yellow">
               * NAME THIS TOMBSTONE ({targetTabs.length} URLs):
             </p>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 placeholder="auto-name (leave blank) or type title..."
-                className="flex-1 bg-black border border-ut-text font-dialogue text-sm px-1.5 py-0.5 text-ut-text outline-none placeholder:text-zinc-600"
+                className="flex-1 bg-rpg-dark-gray border-2 border-rpg-white font-dialogue text-base px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
-              <button
-                onClick={handleConfirmCollapse}
-                className={`${cls.btn.battle} text-[7.5px] px-1.5 py-1 border-ut-lv text-ut-lv`}
-              >
-                [BURY]
-              </button>
+              <PixelButton onClick={handleConfirmCollapse} className="gap-1 flex items-center">
+                <IconErect />
+                <span>[BURY]</span>
+              </PixelButton>
               <button
                 onClick={() => setNamingOpen(false)}
-                className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1"
+                className="font-pixel text-[8px] text-rpg-mid-gray hover:text-rpg-white px-1"
               >
                 CANCEL
               </button>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={handleSelectAll}
-              className="font-pixel text-[7.5px] text-zinc-400 hover:text-ut-lv"
+              className="font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-yellow"
             >
               {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
             </button>
 
-            <button
+            <PixelButton
               onClick={() => setNamingOpen(true)}
-              className={`${cls.btn.battle} text-[7.5px] px-2 py-0.5 border-ut-orange text-ut-orange hover:border-ut-lv hover:text-ut-lv`}
+              className="!border-rpg-yellow !text-rpg-yellow hover:!bg-rpg-yellow hover:!text-rpg-bg gap-1 flex items-center"
               title="Collapse and free RAM in Chrome"
             >
-              🪦 {hasSelection ? `COLLAPSE (${selectedTabs.length})` : `COLLAPSE ALL (${tabs.length})`}
-            </button>
+              <IconErect />
+              <span>{hasSelection ? `COLLAPSE (${selectedTabs.length})` : `COLLAPSE ALL (${tabs.length})`}</span>
+            </PixelButton>
           </div>
         )}
-      </div>
+      </PixelPanel>
 
       {/* List of Living Tabs */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1">

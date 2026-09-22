@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { cls, QUOTES } from '../tokens';
+import { QUOTES } from '../tokens';
 import { formatRelativeTime } from '../../core/lifecycle';
 import type { TombstoneRecord, TombstoneTabItem } from '../../core/db';
 import type { TemporalSession } from '../../core/sessionUtils';
 import type { TabActions } from '../../store/useTabs';
+import { DialogueBox, PixelPanel, PixelButton, TypewriterText } from '../components/RPGPrimitives';
+import { IconTomb, IconRevive, IconPurge, IconMagic } from '../components/GameIcons';
 
 interface CatacombsPageProps {
   tombstones:       TombstoneRecord[];
@@ -37,9 +39,9 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
   if (loading) {
     return (
-      <div className={`${cls.box} p-5 text-center font-dialogue text-[15px] text-ut-lv`}>
-        {QUOTES.checkingDust}
-      </div>
+      <DialogueBox className="text-center text-rpg-yellow">
+        <TypewriterText text={QUOTES.checkingDust} />
+      </DialogueBox>
     );
   }
 
@@ -47,15 +49,17 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
   if (!hasContent) {
     return (
-      <div className={`${cls.box} p-5 text-center space-y-1.5`}>
-        <p className="text-2xl">🪦</p>
-        <p className="font-dialogue text-[15px]">
-          {searchQuery ? QUOTES.noResults : QUOTES.emptyCatacombs}
+      <DialogueBox className="text-center space-y-2">
+        <div className="flex justify-center text-rpg-mid-gray">
+          <IconTomb className="text-4xl" />
+        </div>
+        <p className="text-rpg-white">
+          <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyCatacombs} />
         </p>
         {!searchQuery && (
-          <p className="font-dialogue text-xs text-zinc-400">{QUOTES.hintCatacombs}</p>
+          <p className="text-sm text-rpg-mid-gray">{QUOTES.hintCatacombs}</p>
         )}
-      </div>
+      </DialogueBox>
     );
   }
 
@@ -63,38 +67,40 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
     <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-3">
       {/* ── Temporal Sessions (Mass Extinctions / Window Restores) ── */}
       {temporalSessions.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 px-0.5">
-            <span className="font-pixel text-[8px] text-ut-lv">⚡ TEMPORAL SESSIONS</span>
-            <span className="font-dialogue text-xs text-zinc-500">
-              (Auto-grouped closed window workspaces)
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <IconMagic className="text-[10px] text-rpg-magic" />
+            <span className="font-pixel text-[10px] text-rpg-magic">TEMPORAL SESSIONS</span>
+            <span className="font-dialogue text-sm text-rpg-mid-gray">
+              (Auto-grouped)
             </span>
           </div>
 
           {temporalSessions.map((sess) => {
             const isExp = expandedSessionIds[sess.id] ?? false;
             return (
-              <div key={sess.id} className={`${cls.card} p-2 bg-zinc-950 border-ut-orange`}>
-                <div className="flex items-start justify-between gap-1.5">
+              <PixelPanel key={sess.id} className="!border-rpg-magic !bg-rpg-bg">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-dialogue text-[15px] text-ut-orange truncate font-bold">
-                      ⚡ {sess.title}
+                    <h4 className="font-dialogue text-lg text-rpg-magic truncate font-bold flex items-center gap-1">
+                      <IconMagic />
+                      {sess.title}
                     </h4>
-                    <p className="font-dialogue text-xs text-zinc-400">
+                    <p className="font-dialogue text-sm text-rpg-light-gray">
                       * Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
+                    <PixelButton
                       onClick={() => actions.resurrectSession(sess)}
-                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-orange text-ut-orange hover:bg-ut-orange hover:text-black cursor-pointer`}
-                      title="Reopen all tabs from this session in Chrome"
+                      className="!border-rpg-magic !text-rpg-magic hover:!bg-rpg-magic hover:!text-rpg-bg gap-1 flex items-center"
                     >
-                      ❤️ RESTORE
-                    </button>
+                      <IconRevive />
+                      <span>[RESTORE]</span>
+                    </PixelButton>
                     <button
                       onClick={() => toggleSessionExpand(sess.id)}
-                      className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1 cursor-pointer"
+                      className="font-pixel text-[8px] text-rpg-mid-gray hover:text-rpg-white px-1 cursor-pointer"
                     >
                       {isExp ? '[▲]' : '[▼]'}
                     </button>
@@ -102,15 +108,15 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                 </div>
 
                 {isExp && (
-                  <div className="mt-1.5 pt-1 border-t border-zinc-800 space-y-1 pl-1">
+                  <div className="mt-2 pt-1 border-t-2 border-rpg-mid-gray space-y-1 pl-1">
                     {sess.tabs.map((tab) => (
-                      <p key={tab.cleanUrl} className="font-dialogue text-xs text-zinc-400 truncate">
-                        • {tab.title || tab.domain} <span className="text-zinc-600">({tab.domain})</span>
+                      <p key={tab.cleanUrl} className="font-dialogue text-sm text-rpg-light-gray truncate">
+                        • {tab.title || tab.domain} <span className="text-rpg-mid-gray">({tab.domain})</span>
                       </p>
                     ))}
                   </div>
                 )}
-              </div>
+              </PixelPanel>
             );
           })}
         </div>
@@ -118,10 +124,11 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
       {/* ── Permanent Tombstone Monuments ── */}
       {tombstones.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 px-0.5">
-            <span className="font-pixel text-[8px] text-ut-lv">🪦 PERMANENT TOMBSTONES</span>
-            <span className="font-dialogue text-xs text-zinc-500">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <IconTomb className="text-[10px] text-rpg-yellow" />
+            <span className="font-pixel text-[10px] text-rpg-yellow">PERMANENT TOMBSTONES</span>
+            <span className="font-dialogue text-sm text-rpg-mid-gray">
               ({tombstones.length} monuments)
             </span>
           </div>
@@ -131,79 +138,76 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
             const tabCount   = tomb.tabs.length;
 
             return (
-              <div key={tomb.id} className={`${cls.box} p-2 bg-ut-bg border-ut-text`}>
+              <DialogueBox key={tomb.id} className="p-2 text-sm !border-[2px]">
                 {/* Tombstone Header */}
-                <div className="flex items-start justify-between gap-1.5 mb-1.5">
+                <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base select-none">🪦</span>
-                      <h3 className="font-dialogue text-[16px] text-ut-lv truncate font-bold" title={tomb.title}>
+                    <div className="flex items-center gap-2 text-rpg-yellow">
+                      <IconTomb className="text-xl shrink-0" />
+                      <h3 className="font-dialogue text-lg truncate font-bold" title={tomb.title}>
                         {tomb.title}
                       </h3>
                     </div>
-                    <p className="font-dialogue text-xs text-zinc-400 mt-0.5">
+                    <p className="font-dialogue text-sm text-rpg-light-gray mt-1">
                       * Collapsed {formatRelativeTime(tomb.createdAt)} • {tabCount} {tabCount === 1 ? 'URL' : 'URLs'} bundled
                     </p>
                   </div>
 
                   {/* Top Tombstone Controls */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => actions.resurrectTombstone(tomb)}
-                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-lv text-ut-lv hover:bg-ut-lv hover:text-ut-bg cursor-pointer`}
-                      title="Reopen all URLs in Chrome and dissolve tombstone"
-                    >
-                      ❤️ RESURRECT
-                    </button>
-                    <button
+                  <div className="flex items-center gap-1 shrink-0 mt-1">
+                    <PixelButton onClick={() => actions.resurrectTombstone(tomb)} className="gap-1 flex items-center">
+                      <IconRevive />
+                      <span>[RESURRECT]</span>
+                    </PixelButton>
+                    <PixelButton
                       onClick={() => actions.shatterTombstone(tomb.id)}
-                      className={`${cls.btn.danger} text-[7.5px] px-1 py-0.5 cursor-pointer`}
-                      title="Permanently remove tombstone without opening"
+                      className="!border-rpg-soul !text-rpg-soul hover:!bg-rpg-soul hover:!text-rpg-bg gap-1 flex items-center"
                     >
-                      💔 PURGE
-                    </button>
+                      <IconPurge />
+                      <span>[! PURGE]</span>
+                    </PixelButton>
                   </div>
                 </div>
 
                 {/* Toggle URL list */}
-                <div className="border-t border-ut-muted pt-1 mt-1">
+                <div className="border-t-2 border-rpg-mid-gray pt-2 mt-2">
                   <button
                     onClick={() => toggleExpand(tomb.id)}
-                    className="w-full flex items-center justify-between text-left font-pixel text-[7.5px] text-zinc-400 hover:text-ut-text py-0.5 cursor-pointer"
+                    className="w-full flex items-center justify-between text-left font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-white py-1 cursor-pointer"
                   >
                     <span>{isExpanded ? '▼ CONTENTS' : '▶ CONTENTS'} ({tabCount} URLs)</span>
-                    <span>{isExpanded ? '[COLLAPSE VIEW]' : '[EXPAND VIEW]'}</span>
+                    <span>{isExpanded ? '[COLLAPSE]' : '[EXPAND]'}</span>
                   </button>
 
                   {/* List of URLs inside Tombstone */}
                   {isExpanded && (
-                    <div className="mt-1 space-y-1 pl-1 border-l-2 border-ut-muted">
+                    <div className="mt-2 space-y-1 pl-2 border-l-2 border-rpg-mid-gray">
                       {tomb.tabs.map((tab: TombstoneTabItem) => (
                         <div
                           key={tab.cleanUrl}
-                          className="flex items-center justify-between gap-2 p-1 bg-black/40 hover:bg-zinc-900 border border-transparent hover:border-ut-muted"
+                          className="flex items-center justify-between gap-2 p-1 hover:bg-rpg-dark-gray"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="font-dialogue text-[14px] text-ut-text truncate" title={tab.title}>
+                            <p className="font-dialogue text-base text-rpg-white truncate" title={tab.title}>
                               • {tab.title || tab.domain}
                             </p>
-                            <p className="font-dialogue text-[11px] text-zinc-500 truncate" title={tab.url}>
+                            <p className="font-dialogue text-xs text-rpg-mid-gray truncate" title={tab.url}>
                               {tab.url}
                             </p>
                           </div>
-                          <button
+                          <PixelButton
                             onClick={() => actions.reviveTombstoneUrl(tomb.id, tab)}
-                            className={`${cls.btn.white} text-[7px] shrink-0 cursor-pointer`}
-                            title="Revive only this single URL"
+                            className="!px-1 !py-0.5 !text-[6px] gap-1 flex items-center"
                           >
-                            [⚡ REVIVE]
-                          </button>
+                            <IconRevive />
+                            <span>[REVIVE]</span>
+                          </PixelButton>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
+              </DialogueBox>
             );
           })}
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { cls } from '../tokens';
+import { PixelButton } from './RPGPrimitives';
+import { IconGrave, IconTomb, IconGhost } from './GameIcons';
 
 export type ActivePage = 'graveyard' | 'catacombs' | 'living';
 
@@ -18,33 +19,34 @@ export const BattleNav: React.FC<BattleNavProps> = ({
   tombstoneCount,
   livingCount,
 }) => {
-  const active = 'border-ut-lv text-ut-lv';
-
   return (
-    <div className="grid grid-cols-3 gap-1.5 mb-2">
-      <button
+    <div className="grid grid-cols-3 gap-2 mb-2 shrink-0">
+      <PixelButton
+        active={activePage === 'graveyard'}
         onClick={() => onSelectPage('graveyard')}
-        className={`${cls.btn.battle} text-[7.5px] px-1.5 py-1.5 ${activePage === 'graveyard' ? active : ''}`}
+        className="justify-center flex-col gap-1 py-2"
       >
-        {activePage === 'graveyard' ? <span className="text-ut-soul">❤️</span> : '💀'}
-        GRAVE ({buriedCount})
-      </button>
+        <IconGrave className="text-xl" />
+        <span>GRAVE ({buriedCount})</span>
+      </PixelButton>
 
-      <button
+      <PixelButton
+        active={activePage === 'catacombs'}
         onClick={() => onSelectPage('catacombs')}
-        className={`${cls.btn.battle} text-[7.5px] px-1.5 py-1.5 ${activePage === 'catacombs' ? active : ''}`}
+        className="justify-center flex-col gap-1 py-2"
       >
-        {activePage === 'catacombs' ? <span className="text-ut-soul">❤️</span> : '🪦'}
-        TOMBS ({tombstoneCount})
-      </button>
+        <IconTomb className="text-xl" />
+        <span>TOMBS ({tombstoneCount})</span>
+      </PixelButton>
 
-      <button
+      <PixelButton
+        active={activePage === 'living'}
         onClick={() => onSelectPage('living')}
-        className={`${cls.btn.battle} text-[7.5px] px-1.5 py-1.5 ${activePage === 'living' ? active : ''}`}
+        className="justify-center flex-col gap-1 py-2"
       >
-        {activePage === 'living' ? <span className="text-ut-soul">❤️</span> : '👻'}
-        LIVING ({livingCount})
-      </button>
+        <IconGhost className="text-xl" />
+        <span>LIVING ({livingCount})</span>
+      </PixelButton>
     </div>
   );
 };

@@ -1,23 +1,27 @@
 @import "tailwindcss";
 
-/* ── Undertale Design Tokens ────────────────────────────────────────────────
+/* ── Google Fonts ────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+/* ── Pixel RPG Design Tokens ───────────────────────────────────────────────
    Tailwind v4 reads custom tokens from @theme.
-   This is the single source of truth for all colors and fonts.
-   Change a value here → it propagates via text-ut-*, bg-ut-* across the app.
+   "LESS, BUT STRANGER."
  ────────────────────────────────────────────────────────────────────────── */
 @theme {
   /* Colors */
-  --color-ut-bg:      #0d0d0f;   /* off-black — easier on eyes than #000 */
-  --color-ut-text:    #e8e6e1;   /* warm off-white — less glare than #fff */
-  --color-ut-soul:    #e83a1f;   /* slightly desaturated soul red */
-  --color-ut-lv:      #f5e642;   /* warm yellow — not pure #ffff00 */
-  --color-ut-orange:  #f09030;   /* battle orange — softened */
-  --color-ut-hpRed:   #9e1a1a;   /* deep damage red */
-  --color-ut-alive:   #3dba6f;   /* muted green */
-  --color-ut-dust:    #c9a227;   /* warm amber dust */
-  --color-ut-cobweb:  #d4652a;   /* earthy cobweb orange */
-  --color-ut-buried:  #8a8a96;   /* muted slate gray */
-  --color-ut-muted:   #2a2a30;   /* subtle dark border / separator */
+  --color-rpg-bg:         #000000;
+  --color-rpg-white:      #FFFFFF;
+  --color-rpg-dark-gray:  #111111;
+  --color-rpg-mid-gray:   #555555;
+  --color-rpg-light-gray: #AAAAAA;
+
+  /* Accents */
+  --color-rpg-soul:       #FF0000;
+  --color-rpg-determination: #FF4444;
+  --color-rpg-monster:    #AA44FF;
+  --color-rpg-magic:      #4488FF;
+  --color-rpg-heart:      #44DDFF;
+  --color-rpg-yellow:     #FFFF44;
 
   /* Fonts */
   --font-pixel:    'Press Start 2P', monospace;
@@ -33,15 +37,33 @@
   body {
     margin: 0;
     width: 420px;
+    height: 550px;
     max-height: 550px;
+    background-color: #000000;
+    color: #FFFFFF;
     overflow: hidden;
     image-rendering: pixelated;
     -webkit-font-smoothing: none;
+    
+    /* CRT Scanline background */
+    background-image: 
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+  }
+
+  /* Pixel RPG shadow utility */
+  .shadow-pixel {
+    box-shadow: 4px 4px 0 #555555;
+  }
+  
+  .shadow-pixel-hover {
+    box-shadow: 2px 2px 0 #555555;
   }
 
   /* Undertale-style vertical-only scrollbar */
   ::-webkit-scrollbar       { width: 6px; height: 0; }
-  ::-webkit-scrollbar-track { background: #0d0d0f; border-left: 1px solid #2a2a30; }
-  ::-webkit-scrollbar-thumb { background: #e8e6e1; }
-  ::-webkit-scrollbar-thumb:hover { background: #f5e642; }
+  ::-webkit-scrollbar-track { background: #000000; border-left: 2px solid #555555; }
+  ::-webkit-scrollbar-thumb { background: #FFFFFF; }
+  ::-webkit-scrollbar-thumb:hover { background: #FFFF44; }
 }

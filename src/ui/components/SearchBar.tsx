@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { cls } from '../tokens';
 import { ARCHETYPE_META, TabArchetype } from '../../core/behavior';
 import type { FilterOptions, SortOption, DomainCount } from '../../core/searchUtils';
+import { IconSearch } from './GameIcons';
 
 export interface SearchBarProps {
   filters:           FilterOptions;
@@ -34,28 +34,30 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onChangeFilters,
   onResetFilters,
   availableDomains = [],
-  placeholder = 'search title, url or domain...',
+  placeholder = 'search...',
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="mb-2 shrink-0">
+    <div className="shrink-0 w-full">
       {/* ── Main Search Input Bar ─────────────────────────────────────────── */}
-      <div className={`${cls.card} flex items-center gap-1.5 px-2 py-1`}>
-        <span className="font-pixel text-[8px] text-ut-lv shrink-0 select-none">* SEARCH:</span>
+      <div className="flex items-center gap-1.5 p-1 bg-rpg-dark-gray border-b-2 border-rpg-mid-gray">
+        <span className="font-pixel text-[8px] text-rpg-yellow shrink-0 select-none pl-1 inline-flex items-center gap-1">
+          <IconSearch /> SEARCH:
+        </span>
         <input
           type="text"
           value={filters.query || ''}
           onChange={(e) => onChangeFilters({ query: e.target.value })}
           placeholder={placeholder}
-          className="bg-transparent font-dialogue text-base text-ut-text outline-none w-full placeholder:text-zinc-600"
+          className="bg-transparent font-dialogue text-base text-rpg-white outline-none w-full placeholder:text-rpg-mid-gray"
         />
 
         {/* Clear query button */}
         {filters.query && (
           <button
             onClick={() => onChangeFilters({ query: '' })}
-            className="font-pixel text-[8px] text-zinc-400 hover:text-ut-text px-1 shrink-0 cursor-pointer"
+            className="font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-white px-1 shrink-0 cursor-pointer"
             title="Clear text search"
           >
             [X]
@@ -65,12 +67,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {/* Filter Drawer Toggle */}
         <button
           onClick={() => setDrawerOpen((prev) => !prev)}
-          className={`font-pixel text-[7.5px] px-1.5 py-0.5 border shrink-0 transition-colors cursor-pointer ${
+          className={`font-pixel text-[7.5px] px-1.5 py-1 border-2 shrink-0 transition-colors cursor-pointer ${
             activeFilterCount > 0
-              ? 'border-ut-orange text-ut-orange bg-zinc-950 hover:bg-ut-orange hover:text-black'
+              ? 'border-rpg-yellow text-rpg-yellow bg-rpg-bg hover:bg-rpg-yellow hover:text-rpg-bg'
               : drawerOpen
-              ? 'border-ut-lv text-ut-lv bg-zinc-950'
-              : 'border-zinc-700 text-zinc-400 hover:border-ut-text hover:text-ut-text'
+              ? 'border-rpg-white text-rpg-white bg-rpg-bg'
+              : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
           }`}
           title="Toggle advanced filter drawer"
         >
@@ -80,12 +82,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
       {/* ── Active Filter Pills (Quick Dismiss) ───────────────────────────── */}
       {hasActiveFilters && !drawerOpen && (
-        <div className="flex items-center gap-1 flex-wrap mt-1 px-0.5">
+        <div className="flex items-center gap-1 flex-wrap p-1 bg-rpg-bg border-b-2 border-rpg-mid-gray">
           {filters.archetype && (
             <button
               onClick={() => onChangeFilters({ archetype: undefined })}
-              className="font-pixel text-[7px] border border-yellow-400 text-yellow-400 bg-black/40 px-1 py-0.5 inline-flex items-center gap-1 hover:bg-yellow-400 hover:text-black cursor-pointer"
-              title="Click to remove archetype filter"
+              className="font-pixel text-[7px] border-2 border-rpg-yellow text-rpg-yellow bg-rpg-bg px-1 py-0.5 inline-flex items-center gap-1 hover:bg-rpg-yellow hover:text-rpg-bg cursor-pointer"
             >
               {ARCHETYPE_META[filters.archetype]?.icon} {ARCHETYPE_META[filters.archetype]?.name} ✕
             </button>
@@ -94,8 +95,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {filters.domain && (
             <button
               onClick={() => onChangeFilters({ domain: undefined })}
-              className="font-pixel text-[7px] border border-ut-orange text-ut-orange bg-black/40 px-1 py-0.5 inline-flex items-center gap-1 hover:bg-ut-orange hover:text-black cursor-pointer"
-              title="Click to remove domain filter"
+              className="font-pixel text-[7px] border-2 border-rpg-magic text-rpg-magic bg-rpg-bg px-1 py-0.5 inline-flex items-center gap-1 hover:bg-rpg-magic hover:text-rpg-bg cursor-pointer"
             >
               🌐 {filters.domain} ✕
             </button>
@@ -104,8 +104,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {filters.minAgeDays && (
             <button
               onClick={() => onChangeFilters({ minAgeDays: undefined })}
-              className="font-pixel text-[7px] border border-cyan-400 text-cyan-400 bg-black/40 px-1 py-0.5 inline-flex items-center gap-1 hover:bg-cyan-400 hover:text-black cursor-pointer"
-              title="Click to remove age filter"
+              className="font-pixel text-[7px] border-2 border-rpg-heart text-rpg-heart bg-rpg-bg px-1 py-0.5 inline-flex items-center gap-1 hover:bg-rpg-heart hover:text-rpg-bg cursor-pointer"
             >
               ⏳ &gt;{filters.minAgeDays}d ✕
             </button>
@@ -114,8 +113,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {filters.sortBy && filters.sortBy !== 'recent' && (
             <button
               onClick={() => onChangeFilters({ sortBy: 'recent' })}
-              className="font-pixel text-[7px] border border-ut-lv text-ut-lv bg-black/40 px-1 py-0.5 inline-flex items-center gap-1 hover:bg-ut-lv hover:text-black cursor-pointer"
-              title="Click to reset sort to recent"
+              className="font-pixel text-[7px] border-2 border-rpg-white text-rpg-white bg-rpg-bg px-1 py-0.5 inline-flex items-center gap-1 hover:bg-rpg-white hover:text-rpg-bg cursor-pointer"
             >
               🔃 {filters.sortBy === 'visits' ? 'Visits' : 'Focus'} ✕
             </button>
@@ -123,8 +121,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
           <button
             onClick={onResetFilters}
-            className="font-pixel text-[7px] text-zinc-500 hover:text-red-400 px-1 py-0.5 ml-auto cursor-pointer"
-            title="Reset all filters and text query"
+            className="font-pixel text-[7px] text-rpg-mid-gray hover:text-rpg-soul px-1 py-0.5 ml-auto cursor-pointer"
           >
             [RESET ALL]
           </button>
@@ -133,15 +130,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
       {/* ── Advanced Filter Drawer ────────────────────────────────────────── */}
       {drawerOpen && (
-        <div className={`${cls.card} mt-1 p-2 bg-black/95 border-ut-lv space-y-2 max-h-56 overflow-y-auto pr-1`}>
+        <div className="p-2 bg-rpg-bg border-b-2 border-rpg-mid-gray space-y-2 max-h-56 overflow-y-auto pr-1">
           {/* 1. Behavioral Archetypes */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="font-pixel text-[7.5px] text-ut-lv">* ARCHETYPE:</span>
+              <span className="font-pixel text-[7.5px] text-rpg-yellow">* ARCHETYPE:</span>
               {filters.archetype && (
                 <button
                   onClick={() => onChangeFilters({ archetype: undefined })}
-                  className="font-pixel text-[6.5px] text-zinc-500 hover:text-white cursor-pointer"
+                  className="font-pixel text-[6.5px] text-rpg-mid-gray hover:text-rpg-white cursor-pointer"
                 >
                   CLEAR
                 </button>
@@ -150,10 +147,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <div className="flex flex-wrap gap-1">
               <button
                 onClick={() => onChangeFilters({ archetype: undefined })}
-                className={`font-pixel text-[7px] px-1 py-0.5 border cursor-pointer ${
+                className={`font-pixel text-[7px] px-1 py-0.5 border-2 cursor-pointer ${
                   !filters.archetype
-                    ? 'border-ut-lv text-ut-lv bg-zinc-900 font-bold'
-                    : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                    ? 'border-rpg-yellow text-rpg-yellow bg-rpg-dark-gray font-bold'
+                    : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
                 }`}
               >
                 ALL
@@ -165,12 +162,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   <button
                     key={arch}
                     onClick={() => onChangeFilters({ archetype: isActive ? undefined : arch })}
-                    className={`font-pixel text-[7px] px-1 py-0.5 border cursor-pointer inline-flex items-center gap-1 ${
+                    className={`font-pixel text-[7px] px-1 py-0.5 border-2 cursor-pointer inline-flex items-center gap-1 ${
                       isActive
-                        ? 'border-yellow-400 text-yellow-400 bg-zinc-900 font-bold'
-                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                        ? 'border-rpg-yellow text-rpg-yellow bg-rpg-dark-gray font-bold'
+                        : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
                     }`}
-                    title={meta.description}
                   >
                     <span>{meta.icon}</span>
                     <span>{meta.name}</span>
@@ -184,11 +180,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {availableDomains.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="font-pixel text-[7.5px] text-ut-orange">* TOP DOMAINS:</span>
+                <span className="font-pixel text-[7.5px] text-rpg-magic">* TOP DOMAINS:</span>
                 {filters.domain && (
                   <button
                     onClick={() => onChangeFilters({ domain: undefined })}
-                    className="font-pixel text-[6.5px] text-zinc-500 hover:text-white cursor-pointer"
+                    className="font-pixel text-[6.5px] text-rpg-mid-gray hover:text-rpg-white cursor-pointer"
                   >
                     CLEAR
                   </button>
@@ -201,14 +197,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <button
                       key={domain}
                       onClick={() => onChangeFilters({ domain: isActive ? undefined : domain })}
-                      className={`font-pixel text-[7px] px-1.5 py-0.5 border cursor-pointer inline-flex items-center gap-1 ${
+                      className={`font-pixel text-[7px] px-1.5 py-0.5 border-2 cursor-pointer inline-flex items-center gap-1 ${
                         isActive
-                          ? 'border-ut-orange text-ut-orange bg-zinc-900 font-bold'
-                          : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                          ? 'border-rpg-magic text-rpg-magic bg-rpg-dark-gray font-bold'
+                          : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
                       }`}
                     >
                       <span>🌐 {domain}</span>
-                      <span className="text-zinc-500 text-[6.5px]">({count})</span>
+                      <span className="text-rpg-mid-gray text-[6.5px]">({count})</span>
                     </button>
                   );
                 })}
@@ -219,11 +215,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {/* 3. Inactivity Age Presets */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="font-pixel text-[7.5px] text-cyan-400">* INACTIVITY AGE:</span>
+              <span className="font-pixel text-[7.5px] text-rpg-heart">* INACTIVITY AGE:</span>
               {filters.minAgeDays && (
                 <button
                   onClick={() => onChangeFilters({ minAgeDays: undefined })}
-                  className="font-pixel text-[6.5px] text-zinc-500 hover:text-white cursor-pointer"
+                  className="font-pixel text-[6.5px] text-rpg-mid-gray hover:text-rpg-white cursor-pointer"
                 >
                   CLEAR
                 </button>
@@ -236,10 +232,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   <button
                     key={preset.label}
                     onClick={() => onChangeFilters({ minAgeDays: preset.days })}
-                    className={`font-pixel text-[7px] px-1.5 py-0.5 border cursor-pointer ${
+                    className={`font-pixel text-[7px] px-1.5 py-0.5 border-2 cursor-pointer ${
                       isActive
-                        ? 'border-cyan-400 text-cyan-400 bg-zinc-900 font-bold'
-                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                        ? 'border-rpg-heart text-rpg-heart bg-rpg-dark-gray font-bold'
+                        : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
                     }`}
                   >
                     {preset.label}
@@ -252,7 +248,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {/* 4. Sort Ordering */}
           <div>
             <div className="mb-1">
-              <span className="font-pixel text-[7.5px] text-ut-lv">* SORT ORDER:</span>
+              <span className="font-pixel text-[7.5px] text-rpg-white">* SORT ORDER:</span>
             </div>
             <div className="flex flex-wrap gap-1">
               {SORT_OPTIONS.map((opt) => {
@@ -261,10 +257,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => onChangeFilters({ sortBy: opt.id })}
-                    className={`font-pixel text-[7px] px-1.5 py-0.5 border cursor-pointer ${
+                    className={`font-pixel text-[7px] px-1.5 py-0.5 border-2 cursor-pointer ${
                       isActive
-                        ? 'border-ut-lv text-ut-lv bg-zinc-900 font-bold'
-                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                        ? 'border-rpg-white text-rpg-white bg-rpg-dark-gray font-bold'
+                        : 'border-rpg-mid-gray text-rpg-light-gray hover:border-rpg-white hover:text-rpg-white'
                     }`}
                   >
                     {opt.label}
@@ -275,14 +271,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           </div>
 
           {/* Drawer Footer Controls */}
-          <div className="pt-1.5 border-t border-zinc-800 flex items-center justify-between">
+          <div className="pt-2 mt-2 border-t-2 border-rpg-mid-gray flex items-center justify-between">
             <button
               onClick={onResetFilters}
               disabled={!hasActiveFilters}
-              className={`font-pixel text-[7px] px-1.5 py-0.5 border ${
+              className={`font-pixel text-[7px] px-1.5 py-0.5 border-2 ${
                 hasActiveFilters
-                  ? 'border-red-500/60 text-red-400 hover:bg-red-500 hover:text-white cursor-pointer'
-                  : 'border-zinc-800 text-zinc-600 cursor-not-allowed'
+                  ? 'border-rpg-soul text-rpg-soul hover:bg-rpg-soul hover:text-rpg-bg cursor-pointer'
+                  : 'border-rpg-mid-gray text-rpg-mid-gray cursor-not-allowed'
               }`}
             >
               [RESET ALL]
@@ -290,7 +286,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
             <button
               onClick={() => setDrawerOpen(false)}
-              className="font-pixel text-[7px] border border-ut-text text-ut-text px-2 py-0.5 hover:bg-ut-text hover:text-black cursor-pointer"
+              className="font-pixel text-[7px] border-2 border-rpg-white text-rpg-white px-2 py-0.5 hover:bg-rpg-white hover:text-rpg-bg cursor-pointer"
             >
               [CLOSE ▲]
             </button>
