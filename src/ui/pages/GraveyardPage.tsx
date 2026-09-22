@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cls, QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
-import type { TabRecord } from '../../core/db';
+import type { TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 
 interface GraveyardPageProps {
-  tabs:        TabRecord[];
-  searchQuery: string;
-  loading:     boolean;
-  hoveredUrl:  string | null;
-  onHover:     (url: string | null) => void;
-  actions:     Pick<TabActions, 'revive' | 'purge' | 'sweep' | 'bundleGravesToTombstone' | 'cremateOldest'>;
+  tabs:         TabViewModel[];
+  searchQuery:  string;
+  loading:      boolean;
+  hoveredUrl:   string | null;
+  onHover:      (url: string | null) => void;
+  keepCount:    number;
+  cremateCount: number;
+  totalDead:    number;
+  actions:      Pick<
+    TabActions,
+    'revive' | 'purge' | 'sweep' | 'bundleGravesToTombstone' | 'cremateOldest' | 'setKeepCount'
+  >;
 }
 
 export const GraveyardPage: React.FC<GraveyardPageProps> = ({
@@ -19,31 +25,14 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
   loading,
   hoveredUrl,
   onHover,
+  keepCount,
+  cremateCount,
+  totalDead,
   actions,
 }) => {
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen]     = useState(false);
   const [customTitle, setCustomTitle]   = useState('');
-  const [keepCount, setKeepCount]       = useState<number>(20);
-
-  // Load user's saved retention preference
-  useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.get(['graveyardKeepCount'], (res) => {
-        if (typeof res.graveyardKeepCount === 'number') {
-          setKeepCount(res.graveyardKeepCount);
-        }
-      });
-    }
-  }, []);
-
-  const handleKeepCountChange = (val: number) => {
-    const num = Math.max(0, isNaN(val) ? 0 : val);
-    setKeepCount(num);
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.set({ graveyardKeepCount: num });
-    }
-  };
 
   if (loading) {
     return (
@@ -92,10 +81,6 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
     setNamingOpen(false);
   };
 
-  // Calculate how many oldest tabs would be cremated beyond keepCount
-  const totalDead    = tabs.length;
-  const cremateCount = Math.max(0, totalDead - keepCount);
-
   const handleCremate = async () => {
     if (cremateCount <= 0) return;
     await actions.cremateOldest(keepCount);
@@ -127,7 +112,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
               </button>
               <button
                 onClick={() => setNamingOpen(false)}
-                className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1"
+                className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1 cursor-pointer"
               >
                 CANCEL
               </button>
@@ -139,7 +124,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={handleSelectAll}
-                className="font-pixel text-[7.5px] text-zinc-400 hover:text-ut-lv"
+                className="font-pixel text-[7.5px] text-zinc-400 hover:text-ut-lv cursor-pointer"
               >
                 {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
               </button>
@@ -163,7 +148,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                 min="0"
                 max="500"
                 value={keepCount}
-                onChange={(e) => handleKeepCountChange(parseInt(e.target.value, 10))}
+                onChange={(e) => actions.setKeepCount(parseInt(e.target.value, 10))}
                 className="w-8 bg-black border border-ut-muted font-pixel text-[7.5px] text-center text-ut-lv py-0.5 outline-none"
                 title="Number of newest dead tabs to keep"
               />

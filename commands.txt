@@ -1,0 +1,1 @@
+i want you to assess code quality for now. Our main aim is to have code seperate for js developers and ui ux engineers for that we used reacct redux techniques having store and core but these new implementations it seems like its mixing js logic with just basic ui can you check once please

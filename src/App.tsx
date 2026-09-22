@@ -1,8 +1,8 @@
 /**
  * src/App.tsx  — Root layout. Wires store → pages. Nothing else.
- * Neither a JS dev nor a UI dev needs to touch this unless adding a new page.
+ * Pure presentation & routing wire. Zero business logic. Zero filtering algorithms.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useTabs } from './store/useTabs';
 import { cls } from './ui/tokens';
 import { Header }        from './ui/components/Header';
@@ -14,67 +14,74 @@ import { CatacombsPage } from './ui/pages/CatacombsPage';
 import { LivingPage }    from './ui/pages/LivingPage';
 
 export const App: React.FC = () => {
-  const [activePage,  setActivePage]  = useState<ActivePage>('graveyard');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [hoveredUrl,  setHoveredUrl]  = useState<string | null>(null);
+  const [activePage, setActivePage] = useState<ActivePage>('graveyard');
+  const [hoveredUrl, setHoveredUrl] = useState<string | null>(null);
 
   const {
-    buriedTabs,
-    livingTabs,
+    filteredBuriedTabs,
+    filteredLivingTabs,
+    allBuriedTabs,
+    allLivingTabs,
+    filteredTombstones,
+    filteredTemporalSessions,
     tombstones,
-    archetypes,
     temporalSessions,
+    archetypes,
+    topDomains,
+    filters,
+    activeFilterCount,
+    hasActiveFilters,
+    keepCount,
+    cremateCount,
+    latestAwakening,
     loading,
     actions,
   } = useTabs();
 
-  const filter = (tabs: typeof buriedTabs) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return tabs;
-    return tabs.filter((t) =>
-      t.title.toLowerCase().includes(q) ||
-      t.domain.toLowerCase().includes(q) ||
-      t.cleanUrl.includes(q),
-    );
-  };
-
-  const filteredBuried = useMemo(() => filter(buriedTabs), [buriedTabs, searchQuery]);
-  const filteredLiving = useMemo(() => filter(livingTabs), [livingTabs, searchQuery]);
-
   return (
     <div className={cls.shell}>
       <Header
-        buriedCount={buriedTabs.length}
-        livingCount={livingTabs.length}
+        buriedCount={allBuriedTabs.length}
+        livingCount={allLivingTabs.length}
         awakeningMessage={latestAwakening}
       />
 
       <BattleNav
         activePage={activePage}
         onSelectPage={setActivePage}
-        buriedCount={buriedTabs.length}
+        buriedCount={allBuriedTabs.length}
         tombstoneCount={tombstones.length + temporalSessions.length}
-        livingCount={livingTabs.length}
+        livingCount={allLivingTabs.length}
       />
 
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <SearchBar
+        filters={filters}
+        activeFilterCount={activeFilterCount}
+        hasActiveFilters={hasActiveFilters}
+        onChangeFilters={actions.setFilter}
+        onResetFilters={actions.resetFilters}
+        availableDomains={topDomains}
+      />
 
       {activePage === 'graveyard' && (
         <GraveyardPage
-          tabs={filteredBuried}
-          searchQuery={searchQuery}
+          tabs={filteredBuriedTabs}
+          searchQuery={filters.query || ''}
           loading={loading}
           hoveredUrl={hoveredUrl}
           onHover={setHoveredUrl}
+          keepCount={keepCount}
+          cremateCount={cremateCount}
+          totalDead={allBuriedTabs.length}
           actions={actions}
         />
       )}
 
       {activePage === 'catacombs' && (
         <CatacombsPage
-          tombstones={tombstones}
-          temporalSessions={temporalSessions}
-          searchQuery={searchQuery}
+          tombstones={filteredTombstones}
+          temporalSessions={filteredTemporalSessions}
+          searchQuery={filters.query || ''}
           loading={loading}
           actions={actions}
         />
@@ -82,9 +89,9 @@ export const App: React.FC = () => {
 
       {activePage === 'living' && (
         <LivingPage
-          tabs={filteredLiving}
+          tabs={filteredLivingTabs}
           archetypes={archetypes}
-          searchQuery={searchQuery}
+          searchQuery={filters.query || ''}
           loading={loading}
           hoveredUrl={hoveredUrl}
           onHover={setHoveredUrl}
@@ -94,8 +101,8 @@ export const App: React.FC = () => {
 
       <Footer
         activePage={activePage}
-        hasBuried={buriedTabs.length > 0}
-        hasLiving={livingTabs.length > 0}
+        hasBuried={allBuriedTabs.length > 0}
+        hasLiving={allLivingTabs.length > 0}
         hasTombstones={tombstones.length > 0}
         onReviveAll={actions.resurrectAll}
         onSimulateAging={actions.simulateAging}

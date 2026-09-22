@@ -1,12 +1,11 @@
 import React from 'react';
 import { cls, STATUS_LABELS } from '../tokens';
 import { formatRelativeTime, formatActiveDuration } from '../../core/lifecycle';
-import { classifyTabBehavior, ARCHETYPE_META, getMetamorphosis } from '../../core/behavior';
-import type { TabRecord } from '../../core/db';
+import { ARCHETYPE_META, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 
 interface TabItemProps {
-  tab:             TabRecord;
+  tab:             TabViewModel;
   isHovered:       boolean;
   onHover:         (url: string | null) => void;
   actions:         Pick<TabActions, 'revive' | 'purge' | 'sweep'>;
@@ -24,9 +23,8 @@ export const TabItem: React.FC<TabItemProps> = ({
 }) => {
   const isDead        = tab.status === 'dead';
   const badgeCls      = `${cls.badgeBase} ${cls.badge[tab.status]}`;
-  const archetype     = classifyTabBehavior(tab);
-  const archMeta      = ARCHETYPE_META[archetype];
-  const metamorphosis = getMetamorphosis(tab.previousArchetype, archetype);
+  const archMeta      = ARCHETYPE_META[tab.archetype];
+  const metamorphosis = tab.metamorphosis;
 
   return (
     <div
@@ -47,7 +45,7 @@ export const TabItem: React.FC<TabItemProps> = ({
           {onToggleSelect ? (
             <button
               onClick={() => onToggleSelect(tab.cleanUrl)}
-              className="font-pixel text-[8px] select-none mt-0.5 shrink-0 px-0.5 text-ut-lv hover:text-white"
+              className="font-pixel text-[8px] select-none mt-0.5 shrink-0 px-0.5 text-ut-lv hover:text-white cursor-pointer"
               title="Select for tombstone collapse"
             >
               {isSelected ? '[X]' : '[ ]'}
@@ -67,7 +65,7 @@ export const TabItem: React.FC<TabItemProps> = ({
             >
               {tab.title || 'Untitled Encounter'}
             </h2>
-            <p className="font-dialogue text-xs text-zinc-400 truncate max-w-[200px]">
+            <p className="font-dialogue text-xs text-zinc-400 truncate max-w-50">
               {tab.domain || 'local'} • ACTIVE: {formatActiveDuration(tab.totalActiveTime)}
             </p>
           </div>
@@ -81,12 +79,14 @@ export const TabItem: React.FC<TabItemProps> = ({
               {metamorphosis.icon} {metamorphosis.title}
             </span>
           )}
-          <span
-            className={`${cls.badgeBase} ${archMeta.badgeCls}`}
-            title={`${archMeta.name}: ${archMeta.description}`}
-          >
-            {archMeta.icon} {archMeta.name}
-          </span>
+          {archMeta && (
+            <span
+              className={`${cls.badgeBase} ${archMeta.badgeCls}`}
+              title={`${archMeta.name}: ${archMeta.description}`}
+            >
+              {archMeta.icon} {archMeta.name}
+            </span>
+          )}
           <span className={badgeCls}>{STATUS_LABELS[tab.status]}</span>
         </div>
       </div>

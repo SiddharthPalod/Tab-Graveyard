@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { cls } from '../tokens';
-import { TabArchetype, ARCHETYPE_META } from '../../core/behavior';
+import { TabArchetype, TabViewModel, ARCHETYPE_META } from '../../core/behavior';
 import type { TabRecord } from '../../core/db';
 import type { TabActions } from '../../store/useTabs';
 
 interface BehavioralMirrorProps {
-  archetypes: Record<TabArchetype, TabRecord[]>;
+  archetypes: Record<TabArchetype, (TabRecord | TabViewModel)[]>;
   actions:    Pick<TabActions, 'sweepByArchetype' | 'collapseArchetypeToTombstone'>;
 }
 

@@ -23,7 +23,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
   loading,
   actions,
 }) => {
-  // Track which tombstones and sessions are expanded
+  // Track which tombstones and sessions are expanded in UI
   const [expandedIds, setExpandedIds]               = useState<Record<string, boolean>>({});
   const [expandedSessionIds, setExpandedSessionIds] = useState<Record<string, boolean>>({});
 
@@ -43,31 +43,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
     );
   }
 
-  // Filter tombstones by search query
-  const q = searchQuery.toLowerCase().trim();
-  const filteredTombstones = tombstones.filter((tomb) => {
-    if (!q) return true;
-    if (tomb.title.toLowerCase().includes(q)) return true;
-    return tomb.tabs.some(
-      (tab) =>
-        tab.title.toLowerCase().includes(q) ||
-        tab.domain.toLowerCase().includes(q) ||
-        tab.url.toLowerCase().includes(q),
-    );
-  });
-
-  const filteredSessions = temporalSessions.filter((sess) => {
-    if (!q) return true;
-    if (sess.title.toLowerCase().includes(q)) return true;
-    return sess.tabs.some(
-      (tab) =>
-        tab.title.toLowerCase().includes(q) ||
-        tab.domain.toLowerCase().includes(q) ||
-        tab.url.toLowerCase().includes(q),
-    );
-  });
-
-  const hasContent = filteredTombstones.length > 0 || filteredSessions.length > 0;
+  const hasContent = tombstones.length > 0 || temporalSessions.length > 0;
 
   if (!hasContent) {
     return (
@@ -86,7 +62,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-3">
       {/* ── Temporal Sessions (Mass Extinctions / Window Restores) ── */}
-      {filteredSessions.length > 0 && (
+      {temporalSessions.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 px-0.5">
             <span className="font-pixel text-[8px] text-ut-lv">⚡ TEMPORAL SESSIONS</span>
@@ -95,7 +71,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
             </span>
           </div>
 
-          {filteredSessions.map((sess) => {
+          {temporalSessions.map((sess) => {
             const isExp = expandedSessionIds[sess.id] ?? false;
             return (
               <div key={sess.id} className={`${cls.card} p-2 bg-zinc-950 border-ut-orange`}>
@@ -111,14 +87,14 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => actions.resurrectSession(sess)}
-                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-orange text-ut-orange hover:bg-ut-orange hover:text-black`}
+                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-orange text-ut-orange hover:bg-ut-orange hover:text-black cursor-pointer`}
                       title="Reopen all tabs from this session in Chrome"
                     >
                       ❤️ RESTORE
                     </button>
                     <button
                       onClick={() => toggleSessionExpand(sess.id)}
-                      className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1"
+                      className="font-pixel text-[7.5px] text-zinc-400 hover:text-white px-1 cursor-pointer"
                     >
                       {isExp ? '[▲]' : '[▼]'}
                     </button>
@@ -141,16 +117,16 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
       )}
 
       {/* ── Permanent Tombstone Monuments ── */}
-      {filteredTombstones.length > 0 && (
+      {tombstones.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 px-0.5">
             <span className="font-pixel text-[8px] text-ut-lv">🪦 PERMANENT TOMBSTONES</span>
             <span className="font-dialogue text-xs text-zinc-500">
-              ({filteredTombstones.length} monuments)
+              ({tombstones.length} monuments)
             </span>
           </div>
 
-          {filteredTombstones.map((tomb) => {
+          {tombstones.map((tomb) => {
             const isExpanded = expandedIds[tomb.id] ?? true;
             const tabCount   = tomb.tabs.length;
 
@@ -174,14 +150,14 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => actions.resurrectTombstone(tomb)}
-                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-lv text-ut-lv hover:bg-ut-lv hover:text-ut-bg`}
+                      className={`${cls.btn.battle} text-[7.5px] px-1.5 py-0.5 border-ut-lv text-ut-lv hover:bg-ut-lv hover:text-ut-bg cursor-pointer`}
                       title="Reopen all URLs in Chrome and dissolve tombstone"
                     >
                       ❤️ RESURRECT
                     </button>
                     <button
                       onClick={() => actions.shatterTombstone(tomb.id)}
-                      className={`${cls.btn.danger} text-[7.5px] px-1 py-0.5`}
+                      className={`${cls.btn.danger} text-[7.5px] px-1 py-0.5 cursor-pointer`}
                       title="Permanently remove tombstone without opening"
                     >
                       💔 PURGE
@@ -193,7 +169,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                 <div className="border-t border-ut-muted pt-1 mt-1">
                   <button
                     onClick={() => toggleExpand(tomb.id)}
-                    className="w-full flex items-center justify-between text-left font-pixel text-[7.5px] text-zinc-400 hover:text-ut-text py-0.5"
+                    className="w-full flex items-center justify-between text-left font-pixel text-[7.5px] text-zinc-400 hover:text-ut-text py-0.5 cursor-pointer"
                   >
                     <span>{isExpanded ? '▼ CONTENTS' : '▶ CONTENTS'} ({tabCount} URLs)</span>
                     <span>{isExpanded ? '[COLLAPSE VIEW]' : '[EXPAND VIEW]'}</span>
@@ -217,7 +193,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                           </div>
                           <button
                             onClick={() => actions.reviveTombstoneUrl(tomb.id, tab)}
-                            className={`${cls.btn.white} text-[7px] shrink-0`}
+                            className={`${cls.btn.white} text-[7px] shrink-0 cursor-pointer`}
                             title="Revive only this single URL"
                           >
                             [⚡ REVIVE]

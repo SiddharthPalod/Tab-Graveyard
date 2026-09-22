@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { cls, QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
 import { BehavioralMirror } from '../components/BehavioralMirror';
-import type { TabRecord } from '../../core/db';
-import type { TabArchetype } from '../../core/behavior';
+import type { TabArchetype, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 
 interface LivingPageProps {
-  tabs:        TabRecord[];
-  archetypes:  Record<TabArchetype, TabRecord[]>;
+  tabs:        TabViewModel[];
+  archetypes:  Record<TabArchetype, TabViewModel[]>;
   searchQuery: string;
   loading:     boolean;
   hoveredUrl:  string | null;

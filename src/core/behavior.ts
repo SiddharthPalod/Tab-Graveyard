@@ -255,3 +255,21 @@ export function getMetamorphosis(prev?: string, current?: string): Metamorphosis
 
   return null;
 }
+
+export interface TabViewModel extends TabRecord {
+  archetype: TabArchetype;
+  metamorphosis?: Metamorphosis | null;
+}
+
+/**
+ * Transforms a raw TabRecord into an enriched TabViewModel with pre-computed archetype and metamorphosis.
+ */
+export function toTabViewModel(tab: TabRecord, now: number = Date.now()): TabViewModel {
+  const archetype = classifyTabBehavior(tab, now);
+  const metamorphosis = getMetamorphosis(tab.previousArchetype, archetype);
+  return {
+    ...tab,
+    archetype,
+    metamorphosis,
+  };
+}

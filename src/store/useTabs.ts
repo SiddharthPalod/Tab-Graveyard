@@ -2,15 +2,29 @@
  * src/store/useTabs.ts  — State management layer. All async/DB ops live here.
  * JS devs own this file. Zero JSX. Zero Tailwind.
  *
- * Exposes a clean interface to the UI layer — no DB internals leak upward.
+ * Exposes a clean Redux-like interface to the UI layer — no DB or browser
+ * internals leak upward. UI components receive prepared data and actions.
  */
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { db, TabRecord, TombstoneRecord, TombstoneTabItem } from '../core/db';
 import { evaluateTabLifecycle } from '../core/lifecycle';
 import { generateTombstoneTitle } from '../core/tombstoneUtils';
 import { normalizeUrl, isTrackableUrl } from '../core/urlUtils';
-import { classifyTabBehavior, TabArchetype, ARCHETYPE_META } from '../core/behavior';
+import {
+  TabArchetype,
+  TabViewModel,
+  toTabViewModel,
+  ARCHETYPE_META,
+} from '../core/behavior';
 import { groupTabsIntoTemporalSessions, TemporalSession } from '../core/sessionUtils';
+import {
+  FilterOptions,
+  DomainCount,
+  filterAndSortTabs,
+  extractTopDomains,
+  filterTombstones,
+  filterTemporalSessions,
+} from '../core/searchUtils';
 
 export interface TabActions {
   revive:                       (tab: TabRecord) => Promise<void>;
@@ -28,25 +42,76 @@ export interface TabActions {
   collapseArchetypeToTombstone: (archetype: TabArchetype) => Promise<void>;
   resurrectSession:             (session: TemporalSession) => Promise<void>;
   refresh:                      () => Promise<void>;
+  // Store-level state mutations
+  setFilter:                    (update: Partial<FilterOptions>) => void;
+  resetFilters:                 () => void;
+  setKeepCount:                 (count: number) => void;
 }
 
 export interface TabStore {
-  buriedTabs:       TabRecord[];
-  livingTabs:       TabRecord[];
-  tombstones:       TombstoneRecord[];
-  archetypes:       Record<TabArchetype, TabRecord[]>;
-  temporalSessions: TemporalSession[];
-  latestAwakening?: string;
-  loading:          boolean;
-  actions:          TabActions;
+  // Prepared view models (living & buried)
+  allBuriedTabs:            TabViewModel[];
+  allLivingTabs:            TabViewModel[];
+  filteredBuriedTabs:       TabViewModel[];
+  filteredLivingTabs:       TabViewModel[];
+  // Aliases for seamless UI consumption
+  buriedTabs:               TabViewModel[];
+  livingTabs:               TabViewModel[];
+
+  // Tombstones & Sessions
+  tombstones:               TombstoneRecord[];
+  filteredTombstones:       TombstoneRecord[];
+  temporalSessions:         TemporalSession[];
+  filteredTemporalSessions: TemporalSession[];
+
+  // Archetype & Domain aggregations
+  archetypes:               Record<TabArchetype, TabViewModel[]>;
+  topDomains:               DomainCount[];
+
+  // Filter & Search state (Single source of truth)
+  filters:                  FilterOptions;
+  activeFilterCount:        number;
+  hasActiveFilters:         boolean;
+
+  // Persistence settings
+  keepCount:                number;
+  cremateCount:             number;
+
+  latestAwakening?:         string;
+  loading:                  boolean;
+  actions:                  TabActions;
 }
 
 /** Polls IndexedDB and synchronizes ground truth with Chrome open tabs */
 export function useTabs(): TabStore {
-  const [tabs, setTabs]             = useState<TabRecord[]>([]);
-  const [tombstones, setTombstones] = useState<TombstoneRecord[]>([]);
-  const [awakening, setAwakening]   = useState<string | null>(null);
-  const [loading, setLoading]       = useState(true);
+  const [tabs, setTabs]                         = useState<TabRecord[]>([]);
+  const [tombstones, setTombstones]             = useState<TombstoneRecord[]>([]);
+  const [awakening, setAwakening]               = useState<string | null>(null);
+  const [loading, setLoading]                   = useState(true);
+  const [keepCount, setKeepCountState]          = useState<number>(20);
+  const [filters, setFilters]                   = useState<FilterOptions>({
+    query:  '',
+    sortBy: 'recent',
+  });
+
+  // Load user's saved retention preference from chrome.storage
+  useEffect(() => {
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.get(['graveyardKeepCount'], (res) => {
+        if (typeof res.graveyardKeepCount === 'number') {
+          setKeepCountState(res.graveyardKeepCount);
+        }
+      });
+    }
+  }, []);
+
+  const setKeepCount = useCallback((val: number) => {
+    const num = Math.max(0, isNaN(val) ? 0 : val);
+    setKeepCountState(num);
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      chrome.storage.local.set({ graveyardKeepCount: num });
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -85,7 +150,8 @@ export function useTabs(): TabStore {
       let foundAwakening: string | null = null;
       for (const t of records) {
         if (t.status !== 'dead') {
-          const currentArch = classifyTabBehavior(t, now);
+          const vm = toTabViewModel(t, now);
+          const currentArch = vm.archetype;
           if (!t.previousArchetype) {
             t.previousArchetype = currentArch;
             db.tabs.update(t.cleanUrl, { previousArchetype: currentArch }).catch(() => {});
@@ -131,19 +197,25 @@ export function useTabs(): TabStore {
     };
   }, [loadData]);
 
-  const buriedTabs = useMemo(
-    () => tabs.filter((t) => t.status === 'dead').sort((a, b) => b.lastActivatedAt - a.lastActivatedAt),
-    [tabs],
+  // Transform raw records into enriched TabViewModel instances with pre-computed archetype/metamorphosis
+  const viewModels = useMemo(() => {
+    const now = Date.now();
+    return tabs.map((t) => toTabViewModel(t, now));
+  }, [tabs]);
+
+  const allBuriedTabs = useMemo(
+    () => viewModels.filter((t) => t.status === 'dead').sort((a, b) => b.lastActivatedAt - a.lastActivatedAt),
+    [viewModels],
   );
 
-  const livingTabs = useMemo(
-    () => tabs.filter((t) => t.status !== 'dead').sort((a, b) => b.lastActivatedAt - a.lastActivatedAt),
-    [tabs],
+  const allLivingTabs = useMemo(
+    () => viewModels.filter((t) => t.status !== 'dead').sort((a, b) => b.lastActivatedAt - a.lastActivatedAt),
+    [viewModels],
   );
 
   // Group living tabs into the 8 Behavioral Archetypes
   const archetypes = useMemo(() => {
-    const map: Record<TabArchetype, TabRecord[]> = {
+    const map: Record<TabArchetype, TabViewModel[]> = {
       phantom:  [],
       zombie:   [],
       artifact: [],
@@ -153,20 +225,76 @@ export function useTabs(): TabStore {
       hoard:    [],
       spark:    [],
     };
-    const now = Date.now();
-    for (const tab of livingTabs) {
-      const arch = classifyTabBehavior(tab, now);
-      map[arch].push(tab);
+    for (const tab of allLivingTabs) {
+      map[tab.archetype].push(tab);
     }
     return map;
-  }, [livingTabs]);
+  }, [allLivingTabs]);
 
   // Cluster buried tabs into temporal sessions
   const temporalSessions = useMemo(() => {
-    return groupTabsIntoTemporalSessions(buriedTabs);
-  }, [buriedTabs]);
+    return groupTabsIntoTemporalSessions(allBuriedTabs);
+  }, [allBuriedTabs]);
+
+  // ── Selectors (Pre-computed & Filtered for UI) ─────────────────────────────
+
+  const filteredBuriedTabs = useMemo(
+    () => filterAndSortTabs(allBuriedTabs, filters),
+    [allBuriedTabs, filters],
+  );
+
+  const filteredLivingTabs = useMemo(
+    () => filterAndSortTabs(allLivingTabs, filters),
+    [allLivingTabs, filters],
+  );
+
+  const filteredTombstones = useMemo(
+    () => filterTombstones(tombstones, filters.query, filters.domain),
+    [tombstones, filters.query, filters.domain],
+  );
+
+  const filteredTemporalSessions = useMemo(
+    () => filterTemporalSessions(temporalSessions, filters.query, filters.domain),
+    [temporalSessions, filters.query, filters.domain],
+  );
+
+  const topDomains = useMemo(
+    () => extractTopDomains([...allBuriedTabs, ...allLivingTabs], 8),
+    [allBuriedTabs, allLivingTabs],
+  );
+
+  const activeFilterCount = useMemo(() => {
+    return (
+      (filters.domain ? 1 : 0) +
+      (filters.archetype ? 1 : 0) +
+      (filters.minAgeDays ? 1 : 0) +
+      (filters.sortBy && filters.sortBy !== 'recent' ? 1 : 0)
+    );
+  }, [filters]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      filters.query ||
+      filters.domain ||
+      filters.archetype ||
+      filters.minAgeDays ||
+      (filters.sortBy && filters.sortBy !== 'recent'),
+    );
+  }, [filters]);
+
+  const cremateCount = useMemo(() => {
+    return Math.max(0, allBuriedTabs.length - keepCount);
+  }, [allBuriedTabs.length, keepCount]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
+
+  const setFilter = useCallback((update: Partial<FilterOptions>) => {
+    setFilters((prev) => ({ ...prev, ...update }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters({ query: '', sortBy: 'recent' });
+  }, []);
 
   const revive = async (tab: TabRecord) => {
     const newTab = await chrome.tabs.create({ url: tab.url, active: true });
@@ -189,12 +317,12 @@ export function useTabs(): TabStore {
   };
 
   const resurrectAll = async (limit = 8) => {
-    for (const tab of buriedTabs.slice(0, limit)) await revive(tab);
+    for (const tab of allBuriedTabs.slice(0, limit)) await revive(tab);
   };
 
   const simulateAging = async (days = 4) => {
     const offsetMs = days * 24 * 60 * 60 * 1000;
-    for (const tab of livingTabs) {
+    for (const tab of allLivingTabs) {
       await db.tabs.update(tab.cleanUrl, { lastActivatedAt: tab.lastActivatedAt - offsetMs });
     }
     chrome.runtime.sendMessage({ type: 'TRIGGER_LIFECYCLE_CHECK' });
@@ -301,8 +429,9 @@ export function useTabs(): TabStore {
    * Cremates the oldest dead tabs beyond keepCount (default 20).
    * Keeps the newest keepCount dead tabs and deletes the rest.
    */
-  const cremateOldest = async (keepCount: number = 20) => {
-    const deletedCount = await db.cremateOldestDead(keepCount);
+  const cremateOldest = async (limitCount?: number) => {
+    const targetKeep = typeof limitCount === 'number' ? limitCount : keepCount;
+    const deletedCount = await db.cremateOldestDead(targetKeep);
     await loadData();
     return deletedCount;
   };
@@ -376,14 +505,30 @@ export function useTabs(): TabStore {
     collapseArchetypeToTombstone,
     resurrectSession,
     refresh: loadData,
+    setFilter,
+    resetFilters,
+    setKeepCount,
   };
 
   return {
-    buriedTabs,
-    livingTabs,
+    // Both aliases and explicit names provided
+    buriedTabs: filteredBuriedTabs,
+    livingTabs: filteredLivingTabs,
+    allBuriedTabs,
+    allLivingTabs,
+    filteredBuriedTabs,
+    filteredLivingTabs,
     tombstones,
-    archetypes,
+    filteredTombstones,
     temporalSessions,
+    filteredTemporalSessions,
+    archetypes,
+    topDomains,
+    filters,
+    activeFilterCount,
+    hasActiveFilters,
+    keepCount,
+    cremateCount,
     latestAwakening: awakening || undefined,
     loading,
     actions,
