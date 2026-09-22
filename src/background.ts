@@ -53,12 +53,17 @@ class TabEngine {
     await this.syncOpenTabs();
   };
 
+  private handleWindowRemoved = async (windowId: number) => {
+    const sId = `window_${windowId}_${Date.now()}`;
+    await this.syncOpenTabs(sId);
+  };
+
   /**
    * Ground-truth reconciliation:
    * Compares DB records with actual open Chrome tabs.
    * If any tab was closed, marks it dead immediately.
    */
-  async syncOpenTabs() {
+  async syncOpenTabs(sessionId?: string) {
     try {
       const openChromeTabs = await chrome.tabs.query({});
       const openCleanUrls = new Set<string>();
@@ -85,6 +90,9 @@ class TabEngine {
       for (const rec of livingInDb) {
         if (!openCleanUrls.has(rec.cleanUrl)) {
           await db.markTabDeadByUrl(rec.cleanUrl);
+          if (sessionId) {
+            await db.tabs.update(rec.cleanUrl, { sessionId });
+          }
         }
       }
 
@@ -119,6 +127,9 @@ class TabEngine {
     chrome.tabs.onUpdated.addListener(this.handleTabUpdated);
     chrome.tabs.onActivated.addListener(this.handleTabActivated);
     chrome.tabs.onRemoved.addListener(this.handleTabRemoved);
+    if (typeof chrome.windows !== 'undefined' && chrome.windows.onRemoved) {
+      chrome.windows.onRemoved.addListener(this.handleWindowRemoved);
+    }
 
     chrome.alarms.onAlarm.addListener((alarm) => {
       if (alarm.name === 'lifecycle') this.syncOpenTabs();

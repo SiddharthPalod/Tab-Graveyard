@@ -18,7 +18,15 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredUrl,  setHoveredUrl]  = useState<string | null>(null);
 
-  const { buriedTabs, livingTabs, tombstones, loading, actions } = useTabs();
+  const {
+    buriedTabs,
+    livingTabs,
+    tombstones,
+    archetypes,
+    temporalSessions,
+    loading,
+    actions,
+  } = useTabs();
 
   const filter = (tabs: typeof buriedTabs) => {
     const q = searchQuery.toLowerCase().trim();
@@ -35,13 +43,17 @@ export const App: React.FC = () => {
 
   return (
     <div className={cls.shell}>
-      <Header buriedCount={buriedTabs.length} livingCount={livingTabs.length} />
+      <Header
+        buriedCount={buriedTabs.length}
+        livingCount={livingTabs.length}
+        awakeningMessage={latestAwakening}
+      />
 
       <BattleNav
         activePage={activePage}
         onSelectPage={setActivePage}
         buriedCount={buriedTabs.length}
-        tombstoneCount={tombstones.length}
+        tombstoneCount={tombstones.length + temporalSessions.length}
         livingCount={livingTabs.length}
       />
 
@@ -61,6 +73,7 @@ export const App: React.FC = () => {
       {activePage === 'catacombs' && (
         <CatacombsPage
           tombstones={tombstones}
+          temporalSessions={temporalSessions}
           searchQuery={searchQuery}
           loading={loading}
           actions={actions}
@@ -70,6 +83,7 @@ export const App: React.FC = () => {
       {activePage === 'living' && (
         <LivingPage
           tabs={filteredLiving}
+          archetypes={archetypes}
           searchQuery={searchQuery}
           loading={loading}
           hoveredUrl={hoveredUrl}

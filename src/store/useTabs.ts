@@ -8,36 +8,44 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { db, TabRecord, TombstoneRecord, TombstoneTabItem } from '../core/db';
 import { evaluateTabLifecycle } from '../core/lifecycle';
 import { generateTombstoneTitle } from '../core/tombstoneUtils';
-
 import { normalizeUrl, isTrackableUrl } from '../core/urlUtils';
+import { classifyTabBehavior, TabArchetype, ARCHETYPE_META } from '../core/behavior';
+import { groupTabsIntoTemporalSessions, TemporalSession } from '../core/sessionUtils';
 
 export interface TabActions {
-  revive:              (tab: TabRecord) => Promise<void>;
-  purge:               (cleanUrl: string) => Promise<void>;
-  sweep:               (tab: TabRecord) => Promise<void>;
-  resurrectAll:        (limit?: number) => Promise<void>;
-  simulateAging:       (days?: number) => Promise<void>;
-  collapseToTombstone: (tabs: TabRecord[], customTitle?: string) => Promise<void>;
-  resurrectTombstone:  (tombstone: TombstoneRecord) => Promise<void>;
-  shatterTombstone:    (id: string) => Promise<void>;
-  reviveTombstoneUrl:  (tombstoneId: string, item: TombstoneTabItem) => Promise<void>;
-  bundleGravesToTombstone: (tabs: TabRecord[], customTitle?: string) => Promise<void>;
-  cremateOldest:           (keepCount?: number) => Promise<number>;
-  refresh:                 () => Promise<void>;
+  revive:                       (tab: TabRecord) => Promise<void>;
+  purge:                        (cleanUrl: string) => Promise<void>;
+  sweep:                        (tab: TabRecord) => Promise<void>;
+  resurrectAll:                 (limit?: number) => Promise<void>;
+  simulateAging:                (days?: number) => Promise<void>;
+  collapseToTombstone:          (tabs: TabRecord[], customTitle?: string) => Promise<void>;
+  resurrectTombstone:           (tombstone: TombstoneRecord) => Promise<void>;
+  shatterTombstone:             (id: string) => Promise<void>;
+  reviveTombstoneUrl:           (tombstoneId: string, item: TombstoneTabItem) => Promise<void>;
+  bundleGravesToTombstone:      (tabs: TabRecord[], customTitle?: string) => Promise<void>;
+  cremateOldest:                (keepCount?: number) => Promise<number>;
+  sweepByArchetype:             (archetype: TabArchetype) => Promise<void>;
+  collapseArchetypeToTombstone: (archetype: TabArchetype) => Promise<void>;
+  resurrectSession:             (session: TemporalSession) => Promise<void>;
+  refresh:                      () => Promise<void>;
 }
 
 export interface TabStore {
-  buriedTabs: TabRecord[];
-  livingTabs: TabRecord[];
-  tombstones: TombstoneRecord[];
-  loading:    boolean;
-  actions:    TabActions;
+  buriedTabs:       TabRecord[];
+  livingTabs:       TabRecord[];
+  tombstones:       TombstoneRecord[];
+  archetypes:       Record<TabArchetype, TabRecord[]>;
+  temporalSessions: TemporalSession[];
+  latestAwakening?: string;
+  loading:          boolean;
+  actions:          TabActions;
 }
 
 /** Polls IndexedDB and synchronizes ground truth with Chrome open tabs */
 export function useTabs(): TabStore {
   const [tabs, setTabs]             = useState<TabRecord[]>([]);
   const [tombstones, setTombstones] = useState<TombstoneRecord[]>([]);
+  const [awakening, setAwakening]   = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
 
   const loadData = useCallback(async () => {
@@ -72,6 +80,23 @@ export function useTabs(): TabStore {
           console.warn('[useTabs] chrome.tabs.query unavailable:', e);
         }
       }
+
+      // Update archetypes and detect awakening
+      let foundAwakening: string | null = null;
+      for (const t of records) {
+        if (t.status !== 'dead') {
+          const currentArch = classifyTabBehavior(t, now);
+          if (!t.previousArchetype) {
+            t.previousArchetype = currentArch;
+            db.tabs.update(t.cleanUrl, { previousArchetype: currentArch }).catch(() => {});
+          } else if (t.previousArchetype !== currentArch) {
+            if ((t.previousArchetype === 'zombie' || t.previousArchetype === 'phantom') && currentArch === 'spark') {
+              foundAwakening = `* A ${t.previousArchetype.toUpperCase()} has awakened into a SPARK! Your DETERMINATION grows.`;
+            }
+          }
+        }
+      }
+      if (foundAwakening) setAwakening(foundAwakening);
 
       // Evaluate lifecycle on the fly — avoids stale DB status for open tabs
       setTabs(records.map((t) => (t.status !== 'dead' ? { ...t, status: evaluateTabLifecycle(t, now) } : t)));
@@ -115,6 +140,31 @@ export function useTabs(): TabStore {
     () => tabs.filter((t) => t.status !== 'dead').sort((a, b) => b.lastActivatedAt - a.lastActivatedAt),
     [tabs],
   );
+
+  // Group living tabs into the 8 Behavioral Archetypes
+  const archetypes = useMemo(() => {
+    const map: Record<TabArchetype, TabRecord[]> = {
+      phantom:  [],
+      zombie:   [],
+      artifact: [],
+      mayfly:   [],
+      grimoire: [],
+      abyss:    [],
+      hoard:    [],
+      spark:    [],
+    };
+    const now = Date.now();
+    for (const tab of livingTabs) {
+      const arch = classifyTabBehavior(tab, now);
+      map[arch].push(tab);
+    }
+    return map;
+  }, [livingTabs]);
+
+  // Cluster buried tabs into temporal sessions
+  const temporalSessions = useMemo(() => {
+    return groupTabsIntoTemporalSessions(buriedTabs);
+  }, [buriedTabs]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -257,6 +307,59 @@ export function useTabs(): TabStore {
     return deletedCount;
   };
 
+  /**
+   * One-click sweep for an entire behavioral archetype.
+   * Closes all tabs belonging to that archetype in Chrome and marks them dead.
+   */
+  const sweepByArchetype = async (archetype: TabArchetype) => {
+    const targets = archetypes[archetype];
+    if (!targets || targets.length === 0) return;
+
+    const tabIds = targets.map((t) => t.tabId).filter((id): id is number => typeof id === 'number');
+    if (tabIds.length > 0) {
+      try {
+        await chrome.tabs.remove(tabIds);
+      } catch (err) {
+        console.warn('[useTabs] Some tabs were already closed:', err);
+      }
+    }
+    for (const t of targets) {
+      await db.markTabDeadByUrl(t.cleanUrl);
+    }
+    await loadData();
+  };
+
+  /**
+   * Collapses an entire archetype into a dedicated Tombstone.
+   */
+  const collapseArchetypeToTombstone = async (archetype: TabArchetype) => {
+    const targets = archetypes[archetype];
+    if (!targets || targets.length === 0) return;
+    const meta = ARCHETYPE_META[archetype];
+    await collapseToTombstone(targets, `${meta.icon} ${meta.name} BUNDLE`);
+  };
+
+  /**
+   * Reopens all tabs in a temporal session back into Chrome.
+   */
+  const resurrectSession = async (session: TemporalSession) => {
+    for (const item of session.tabs) {
+      try {
+        const created = await chrome.tabs.create({ url: item.url, active: false });
+        await db.upsertTab({
+          url:    item.url,
+          title:  item.title,
+          domain: item.domain,
+          tabId:  created.id,
+          status: 'alive',
+        });
+      } catch (err) {
+        console.error('[useTabs] Failed to resurrect session URL:', item.url, err);
+      }
+    }
+    await loadData();
+  };
+
   const actions: TabActions = {
     revive,
     purge,
@@ -269,8 +372,20 @@ export function useTabs(): TabStore {
     reviveTombstoneUrl,
     bundleGravesToTombstone,
     cremateOldest,
+    sweepByArchetype,
+    collapseArchetypeToTombstone,
+    resurrectSession,
     refresh: loadData,
   };
 
-  return { buriedTabs, livingTabs, tombstones, loading, actions };
+  return {
+    buriedTabs,
+    livingTabs,
+    tombstones,
+    archetypes,
+    temporalSessions,
+    latestAwakening: awakening || undefined,
+    loading,
+    actions,
+  };
 }

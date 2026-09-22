@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { cls, QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
+import { BehavioralMirror } from '../components/BehavioralMirror';
 import type { TabRecord } from '../../core/db';
+import type { TabArchetype } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 
 interface LivingPageProps {
   tabs:        TabRecord[];
+  archetypes:  Record<TabArchetype, TabRecord[]>;
   searchQuery: string;
   loading:     boolean;
   hoveredUrl:  string | null;
   onHover:     (url: string | null) => void;
-  actions:     Pick<TabActions, 'revive' | 'purge' | 'sweep' | 'collapseToTombstone'>;
+  actions:     Pick<
+    TabActions,
+    | 'revive'
+    | 'purge'
+    | 'sweep'
+    | 'collapseToTombstone'
+    | 'sweepByArchetype'
+    | 'collapseArchetypeToTombstone'
+  >;
 }
 
 export const LivingPage: React.FC<LivingPageProps> = ({
   tabs,
+  archetypes,
   searchQuery,
   loading,
   hoveredUrl,
@@ -74,6 +86,9 @@ export const LivingPage: React.FC<LivingPageProps> = ({
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
+      {/* The Behavioral Mirror — Psychological Archetypes & Sweeps */}
+      <BehavioralMirror archetypes={archetypes} actions={actions} />
+
       {/* Catacombs Collapse Action Bar */}
       <div className={`${cls.card} p-1.5 mb-1.5 bg-black/60`}>
         {namingOpen ? (

@@ -15,8 +15,9 @@ export interface TabRecord {
   openedAt: number;       // Unix ms
   lastActivatedAt: number;// Unix ms
   totalActiveTime: number;// ms of actual active focus
-  activationCount: number;
-  sessionId?: string;
+  activationCount:   number;
+  sessionId?:         string;
+  previousArchetype?: string;
 }
 
 export interface TombstoneTabItem {

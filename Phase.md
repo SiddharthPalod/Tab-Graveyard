@@ -115,10 +115,6 @@ Contents:
 - StackOverflow: useEffect infinite loop
 - GitHub: React router
 
-```
-
-**Technical implementation:** The Tombstone is a lightweight local HTML page (`chrome-extension://.../tombstone.html?session=123`) injected into the tab bar. It acts as a spatial placeholder, saving memory while eliminating the fear of loss.
-
 ---
 
 ## Phase 5 — The Behavioral Mirror (Zero-Input Profiling)
@@ -148,18 +144,35 @@ This requires simple thresholds (`totalActiveTime`, `activationCount`, `lastActi
 
 ---
 
-## Phase 6 — Temporal Sessions & One-Click Sweeps
+## Phase 5 — The Behavioral Mirror (Zero-Input Profiling)
+Replace manual tagging with passive behavioral analysis. Show users exactly how they are (not) using their tabs to break the illusion that everything is important.
 
+Use the data from Phase 1 to categorize the graveyard automatically:
+
+☠️ YOUR PURGATORY
+
+👻 The Phantoms (42 tabs)
+Opened in background, viewed < 5 seconds. 
+(You just wanted to save the link).
+
+🧟 The Zombies (15 tabs)
+Clicked for 2 seconds daily, never read. 
+(You are just making sure they are still there).
+
+🏺 The Artifacts (8 tabs)
+Spent 2+ hours here last week, 0 minutes this week. 
+(You are done with this project).
+
+This requires simple thresholds (totalActiveTime, activationCount, lastActivatedAt). No ML required.
+
+## Phase 6 — Temporal Sessions & One-Click Sweeps
 Build features that clear clutter effortlessly.
 
-**1. Resurrect Session**
-Group tabs opened or active around the same time window into deterministic temporal sessions. Let users restore an entire past workspace with one click.
+1. Resurrect Session Group tabs opened or active around the same time window into deterministic temporal sessions. Let users restore an entire past workspace with one click.
 
-**2. The One-Click Sweep**
-Allow users to clear out specific profiles of tabs instantly without confirmation dialogs.
+2. The One-Click Sweep Allow users to clear out specific profiles of tabs instantly without confirmation dialogs.
 
-> **[ 🧹 Sweep all Phantoms to Graveyard ]**
-> **[ 🧹 Collapse all YouTube tabs to one Tombstone ]**
+[ 🧹 Sweep all Phantoms to Graveyard ] [ 🧹 Collapse all YouTube tabs to one Tombstone ]
 
 Because resurrection is guaranteed and instantaneous, users will trust the sweep.
 
@@ -173,6 +186,7 @@ Make retrieval bulletproof.
 Search: `github`
 Filter: `Domain` + `Status: Dead`
 Filter: `Profile: Artifacts` + `Date > 30 days`
+and so on..
 
 ```
 

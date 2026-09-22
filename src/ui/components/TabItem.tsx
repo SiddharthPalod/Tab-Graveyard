@@ -1,6 +1,7 @@
 import React from 'react';
 import { cls, STATUS_LABELS } from '../tokens';
 import { formatRelativeTime, formatActiveDuration } from '../../core/lifecycle';
+import { classifyTabBehavior, ARCHETYPE_META, getMetamorphosis } from '../../core/behavior';
 import type { TabRecord } from '../../core/db';
 import type { TabActions } from '../../store/useTabs';
 
@@ -21,8 +22,11 @@ export const TabItem: React.FC<TabItemProps> = ({
   isSelected,
   onToggleSelect,
 }) => {
-  const isDead  = tab.status === 'dead';
-  const badgeCls = `${cls.badgeBase} ${cls.badge[tab.status]}`;
+  const isDead        = tab.status === 'dead';
+  const badgeCls      = `${cls.badgeBase} ${cls.badge[tab.status]}`;
+  const archetype     = classifyTabBehavior(tab);
+  const archMeta      = ARCHETYPE_META[archetype];
+  const metamorphosis = getMetamorphosis(tab.previousArchetype, archetype);
 
   return (
     <div
@@ -68,7 +72,23 @@ export const TabItem: React.FC<TabItemProps> = ({
             </p>
           </div>
         </div>
-        <span className={badgeCls}>{STATUS_LABELS[tab.status]}</span>
+        <div className="flex items-center gap-1 shrink-0">
+          {metamorphosis && (
+            <span
+              className={`${cls.badgeBase} ${metamorphosis.badgeCls}`}
+              title={metamorphosis.flavor}
+            >
+              {metamorphosis.icon} {metamorphosis.title}
+            </span>
+          )}
+          <span
+            className={`${cls.badgeBase} ${archMeta.badgeCls}`}
+            title={`${archMeta.name}: ${archMeta.description}`}
+          >
+            {archMeta.icon} {archMeta.name}
+          </span>
+          <span className={badgeCls}>{STATUS_LABELS[tab.status]}</span>
+        </div>
       </div>
 
       {/* Stats + actions row */}
