@@ -40,22 +40,22 @@ export const LivingPage: React.FC<LivingPageProps> = ({
 
   if (loading) {
     return (
-      <DialogueBox className="text-center text-rpg-yellow">
+      <div className="p-3 bg-rpg-dark-gray/90 border border-rpg-border text-center text-rpg-yellow font-dialogue text-base rounded-sm">
         <TypewriterText text={QUOTES.checkingDust} />
-      </DialogueBox>
+      </div>
     );
   }
 
   if (tabs.length === 0) {
     return (
-      <DialogueBox className="text-center space-y-2">
+      <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
           <IconGhost className="text-4xl" />
         </div>
-        <p className="text-rpg-white">
+        <p className="text-slate-200 font-sans text-xs">
           <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyLiving} />
         </p>
-      </DialogueBox>
+      </div>
     );
   }
 
@@ -92,29 +92,32 @@ export const LivingPage: React.FC<LivingPageProps> = ({
       {/* The Behavioral Mirror — Psychological Archetypes & Sweeps */}
       <BehavioralMirror archetypes={archetypes} actions={actions} />
 
-      {/* Catacombs Collapse Action Bar */}
-      <PixelPanel className="p-2 mb-2 !border-rpg-white !bg-rpg-bg">
+      {/* Catacombs Collapse Action Bar (Sleek fill over outline) */}
+      <div className="p-1.5 mb-1.5 bg-rpg-dark-gray/80 border border-rpg-border rounded-sm">
         {namingOpen ? (
-          <div className="space-y-2">
-            <p className="font-pixel text-[8px] text-rpg-yellow">
+          <div className="space-y-1.5">
+            <p className="font-pixel text-[7.5px] text-rpg-yellow">
               * NAME THIS TOMBSTONE ({targetTabs.length} URLs):
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 placeholder="auto-name (leave blank) or type title..."
-                className="flex-1 bg-rpg-dark-gray border-2 border-rpg-white font-dialogue text-base px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
+                className="flex-1 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
-              <PixelButton onClick={handleConfirmCollapse} className="gap-1 flex items-center">
-                <IconErect />
-                <span>[BURY]</span>
-              </PixelButton>
+              <button 
+                onClick={handleConfirmCollapse} 
+                className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer"
+              >
+                <IconErect className="text-xs" />
+                <span>BURY</span>
+              </button>
               <button
                 onClick={() => setNamingOpen(false)}
-                className="font-pixel text-[8px] text-rpg-mid-gray hover:text-rpg-white px-1"
+                className="font-pixel text-[7.5px] text-rpg-mid-gray hover:text-rpg-white px-1"
               >
                 CANCEL
               </button>
@@ -124,22 +127,22 @@ export const LivingPage: React.FC<LivingPageProps> = ({
           <div className="flex items-center justify-between gap-2">
             <button
               onClick={handleSelectAll}
-              className="font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-yellow"
+              className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-rpg-yellow cursor-pointer"
             >
               {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
             </button>
 
-            <PixelButton
+            <button
               onClick={() => setNamingOpen(true)}
-              className="!border-rpg-yellow !text-rpg-yellow hover:!bg-rpg-yellow hover:!text-rpg-bg gap-1 flex items-center"
-              title="Collapse and free RAM in Chrome"
+              className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
+              title="Collapse open tabs in Chrome to free RAM"
             >
-              <IconErect />
+              <IconErect className="text-xs" />
               <span>{hasSelection ? `COLLAPSE (${selectedTabs.length})` : `COLLAPSE ALL (${tabs.length})`}</span>
-            </PixelButton>
+            </button>
           </div>
         )}
-      </PixelPanel>
+      </div>
 
       {/* List of Living Tabs */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1">

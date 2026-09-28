@@ -1,35 +1,39 @@
 @import "tailwindcss";
 
 /* ── Google Fonts ────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Press+Start+2P&family=VT323&display=swap');
 
 /* ── Pixel RPG Design Tokens ───────────────────────────────────────────────
    Tailwind v4 reads custom tokens from @theme.
-   "LESS, BUT STRANGER."
+   Softened Moody Midnight Graveyard Palette
  ────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Colors */
-  --color-rpg-bg:         #000000;
-  --color-rpg-white:      #FFFFFF;
-  --color-rpg-dark-gray:  #111111;
-  --color-rpg-mid-gray:   #555555;
-  --color-rpg-light-gray: #AAAAAA;
+  /* Moody Backgrounds & Surfaces */
+  --color-rpg-bg:            #171817; /* Deep charcoal stone */
+  --color-rpg-white:         #E3E3DE; /* Aged limestone */
+  --color-rpg-dark-gray:     #222321; /* Dark weathered stone */
+  --color-rpg-surface:       #2B2C29; /* Stone surface */
+  --color-rpg-surface-hover: #353633; /* Worn stone highlight */
+  --color-rpg-border:        #464743; /* Rough stone edge */
+  --color-rpg-mid-gray:      #666762; /* Weathered stone divider */
+  --color-rpg-light-gray:    #A3A49D; /* Faded stone lettering */
 
-  /* Accents */
-  --color-rpg-soul:       #FF0000;
-  --color-rpg-determination: #FF4444;
-  --color-rpg-monster:    #AA44FF;
-  --color-rpg-magic:      #4488FF;
-  --color-rpg-heart:      #44DDFF;
-  --color-rpg-yellow:     #FFFF44;
+  /* Accents (Refined & Desaturated for comfort, pop on active) */
+  --color-rpg-soul:          #FF4D5E; /* Warm crimson */
+  --color-rpg-determination: #FF6B6B;
+  --color-rpg-monster:       #A578FF; /* Bruised ethereal purple */
+  --color-rpg-magic:         #569BFF; /* Ethereal blue */
+  --color-rpg-heart:         #2ED573; /* Vibrant spirit green */
+  --color-rpg-yellow:        #FFD32A; /* Warm golden relic */
 
-  /* Fonts */
+  /* Balanced Typography Stack */
   --font-pixel:    'Press Start 2P', monospace;
   --font-dialogue: 'VT323', monospace;
+  --font-sans:     'Inter', system-ui, -apple-system, sans-serif;
 
   /* Popup dimensions */
   --width-popup:  420px;
-  --height-popup: 550px;
+  --height-popup: 560px;
 }
 
 /* ── Base reset ───────────────────────────────────────────────────────────── */
@@ -37,33 +41,56 @@
   body {
     margin: 0;
     width: 420px;
-    height: 550px;
-    max-height: 550px;
-    background-color: #000000;
-    color: #FFFFFF;
+    height: 560px;
+    max-height: 560px;
+    background-color: #171817;
+    color: #F3F2F8;
     overflow: hidden;
-    image-rendering: pixelated;
-    -webkit-font-smoothing: none;
-    
-    /* CRT Scanline background */
-    background-image: 
-      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    font-family: var(--font-sans);
+  
     background-size: 100% 2px, 3px 100%;
   }
 
   /* Pixel RPG shadow utility */
   .shadow-pixel {
-    box-shadow: 4px 4px 0 #555555;
+    box-shadow: 2px 2px 0 #0D0C13;
   }
   
   .shadow-pixel-hover {
-    box-shadow: 2px 2px 0 #555555;
+    box-shadow: 1px 1px 0 #0D0C13;
   }
 
-  /* Undertale-style vertical-only scrollbar */
-  ::-webkit-scrollbar       { width: 6px; height: 0; }
-  ::-webkit-scrollbar-track { background: #000000; border-left: 2px solid #555555; }
-  ::-webkit-scrollbar-thumb { background: #FFFFFF; }
-  ::-webkit-scrollbar-thumb:hover { background: #FFFF44; }
+  /* Retro styled vertical scrollbar */
+  ::-webkit-scrollbar       { width: 5px; height: 0; }
+  ::-webkit-scrollbar-track { background: #14131D; border-left: 1px solid #34304A; }
+  ::-webkit-scrollbar-thumb { background: #554F70; border-radius: 1px; }
+  ::-webkit-scrollbar-thumb:hover { background: #FFD32A; }
+}
+
+/* Animations */
+@keyframes hp-pulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px rgba(46, 213, 115, 0.6)); }
+  50% { opacity: 0.85; filter: drop-shadow(0 0 6px rgba(46, 213, 115, 0.9)); }
+}
+
+@keyframes hp-danger {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 3px rgba(255, 77, 94, 0.8)); }
+  50% { opacity: 0.6; filter: drop-shadow(0 0 8px rgba(255, 77, 94, 1)); }
+}
+
+.animate-hp-pulse {
+  animation: hp-pulse 2s infinite ease-in-out;
+}
+
+.animate-hp-danger {
+  animation: hp-danger 0.8s infinite ease-in-out;
+}
+
+@keyframes ghost-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+.animate-ghost {
+  animation: ghost-float 2.5s infinite ease-in-out;
 }

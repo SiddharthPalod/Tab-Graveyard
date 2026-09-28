@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { QUOTES } from '../tokens';
+import { cls, QUOTES } from '../tokens';
 import { formatRelativeTime } from '../../core/lifecycle';
 import type { TombstoneRecord, TombstoneTabItem } from '../../core/db';
 import type { TemporalSession } from '../../core/sessionUtils';
 import type { TabActions } from '../../store/useTabs';
-import { DialogueBox, PixelPanel, PixelButton, TypewriterText } from '../components/RPGPrimitives';
+import { TypewriterText } from '../components/RPGPrimitives';
 import { IconTomb, IconRevive, IconPurge, IconMagic } from '../components/GameIcons';
 
 interface CatacombsPageProps {
@@ -39,9 +39,9 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
   if (loading) {
     return (
-      <DialogueBox className="text-center text-rpg-yellow">
+      <div className="p-3 bg-rpg-dark-gray/90 border border-rpg-border text-center text-rpg-yellow font-dialogue text-base rounded-sm">
         <TypewriterText text={QUOTES.checkingDust} />
-      </DialogueBox>
+      </div>
     );
   }
 
@@ -49,29 +49,29 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
   if (!hasContent) {
     return (
-      <DialogueBox className="text-center space-y-2">
+      <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
           <IconTomb className="text-4xl" />
         </div>
-        <p className="text-rpg-white">
+        <p className="text-slate-200 font-sans text-xs">
           <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyCatacombs} />
         </p>
         {!searchQuery && (
-          <p className="text-sm text-rpg-mid-gray">{QUOTES.hintCatacombs}</p>
+          <p className="text-[11px] text-rpg-light-gray font-sans">{QUOTES.hintCatacombs}</p>
         )}
-      </DialogueBox>
+      </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-3">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-2.5">
       {/* ── Temporal Sessions (Mass Extinctions / Window Restores) ── */}
       {temporalSessions.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <IconMagic className="text-[10px] text-rpg-magic" />
-            <span className="font-pixel text-[10px] text-rpg-magic">TEMPORAL SESSIONS</span>
-            <span className="font-dialogue text-sm text-rpg-mid-gray">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 px-1">
+            <IconMagic className="text-xs text-rpg-magic" />
+            <span className="font-pixel text-[8px] text-rpg-magic">TEMPORAL SESSIONS</span>
+            <span className="font-sans text-[10.5px] text-rpg-light-gray/70">
               (Auto-grouped)
             </span>
           </div>
@@ -79,44 +79,44 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
           {temporalSessions.map((sess) => {
             const isExp = expandedSessionIds[sess.id] ?? false;
             return (
-              <PixelPanel key={sess.id} className="!border-rpg-magic !bg-rpg-bg">
+              <div key={sess.id} className="p-2 bg-rpg-dark-gray/80 border border-rpg-magic/40 rounded-sm shadow-pixel">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-dialogue text-lg text-rpg-magic truncate font-bold flex items-center gap-1">
-                      <IconMagic />
-                      {sess.title}
+                    <h4 className="font-sans text-[12.5px] text-rpg-magic truncate font-semibold flex items-center gap-1">
+                      <IconMagic className="text-xs shrink-0" />
+                      <span>{sess.title}</span>
                     </h4>
-                    <p className="font-dialogue text-sm text-rpg-light-gray">
-                      * Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
+                    <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
+                      Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <PixelButton
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
                       onClick={() => actions.resurrectSession(sess)}
-                      className="!border-rpg-magic !text-rpg-magic hover:!bg-rpg-magic hover:!text-rpg-bg gap-1 flex items-center"
+                      className="font-pixel text-[8px] bg-sky-700 hover:bg-sky-600 text-white px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
                     >
-                      <IconRevive />
-                      <span>[RESTORE]</span>
-                    </PixelButton>
+                      <IconRevive className="text-xs" />
+                      <span>RESTORE</span>
+                    </button>
                     <button
                       onClick={() => toggleSessionExpand(sess.id)}
-                      className="font-pixel text-[8px] text-rpg-mid-gray hover:text-rpg-white px-1 cursor-pointer"
+                      className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border"
                     >
-                      {isExp ? '[▲]' : '[▼]'}
+                      {isExp ? '▲' : '▼'}
                     </button>
                   </div>
                 </div>
 
                 {isExp && (
-                  <div className="mt-2 pt-1 border-t-2 border-rpg-mid-gray space-y-1 pl-1">
+                  <div className="mt-2 pt-1.5 border-t border-rpg-border/60 space-y-1 pl-1">
                     {sess.tabs.map((tab) => (
-                      <p key={tab.cleanUrl} className="font-dialogue text-sm text-rpg-light-gray truncate">
-                        • {tab.title || tab.domain} <span className="text-rpg-mid-gray">({tab.domain})</span>
+                      <p key={tab.cleanUrl} className="font-sans text-[11px] text-slate-300 truncate">
+                        • {tab.title || tab.domain} <span className="text-rpg-light-gray/70">({tab.domain})</span>
                       </p>
                     ))}
                   </div>
                 )}
-              </PixelPanel>
+              </div>
             );
           })}
         </div>
@@ -124,11 +124,11 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
       {/* ── Permanent Tombstone Monuments ── */}
       {tombstones.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <IconTomb className="text-[10px] text-rpg-yellow" />
-            <span className="font-pixel text-[10px] text-rpg-yellow">PERMANENT TOMBSTONES</span>
-            <span className="font-dialogue text-sm text-rpg-mid-gray">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 px-1">
+            <IconTomb className="text-xs text-rpg-yellow" />
+            <span className="font-pixel text-[8px] text-rpg-yellow">PERMANENT TOMBSTONES</span>
+            <span className="font-sans text-[10.5px] text-rpg-light-gray/70">
               ({tombstones.length} monuments)
             </span>
           </div>
@@ -138,42 +138,45 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
             const tabCount   = tomb.tabs.length;
 
             return (
-              <DialogueBox key={tomb.id} className="p-2 text-sm !border-[2px]">
+              <div key={tomb.id} className="p-2 bg-rpg-dark-gray/80 border border-rpg-border rounded-sm shadow-pixel">
                 {/* Tombstone Header */}
-                <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-start justify-between gap-2 mb-1.5">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 text-rpg-yellow">
-                      <IconTomb className="text-xl shrink-0" />
-                      <h3 className="font-dialogue text-lg truncate font-bold" title={tomb.title}>
+                    <div className="flex items-center gap-1.5 text-rpg-yellow">
+                      <IconTomb className="text-sm shrink-0" />
+                      <h3 className="font-sans text-[13px] truncate font-semibold text-slate-100" title={tomb.title}>
                         {tomb.title}
                       </h3>
                     </div>
-                    <p className="font-dialogue text-sm text-rpg-light-gray mt-1">
-                      * Collapsed {formatRelativeTime(tomb.createdAt)} • {tabCount} {tabCount === 1 ? 'URL' : 'URLs'} bundled
+                    <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
+                      Collapsed {formatRelativeTime(tomb.createdAt)} • {tabCount} {tabCount === 1 ? 'URL' : 'URLs'} bundled
                     </p>
                   </div>
 
                   {/* Top Tombstone Controls */}
-                  <div className="flex items-center gap-1 shrink-0 mt-1">
-                    <PixelButton onClick={() => actions.resurrectTombstone(tomb)} className="gap-1 flex items-center">
-                      <IconRevive />
-                      <span>[RESURRECT]</span>
-                    </PixelButton>
-                    <PixelButton
-                      onClick={() => actions.shatterTombstone(tomb.id)}
-                      className="!border-rpg-soul !text-rpg-soul hover:!bg-rpg-soul hover:!text-rpg-bg gap-1 flex items-center"
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button 
+                      onClick={() => actions.resurrectTombstone(tomb)} 
+                      className={cls.btn.revive}
                     >
-                      <IconPurge />
-                      <span>[! PURGE]</span>
-                    </PixelButton>
+                      <IconRevive className="text-xs" />
+                      <span>RESURRECT</span>
+                    </button>
+                    <button
+                      onClick={() => actions.shatterTombstone(tomb.id)}
+                      className={cls.btn.danger}
+                    >
+                      <IconPurge className="text-xs" />
+                      <span>PURGE</span>
+                    </button>
                   </div>
                 </div>
 
                 {/* Toggle URL list */}
-                <div className="border-t-2 border-rpg-mid-gray pt-2 mt-2">
+                <div className="border-t border-rpg-border/60 pt-1 mt-1">
                   <button
                     onClick={() => toggleExpand(tomb.id)}
-                    className="w-full flex items-center justify-between text-left font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-white py-1 cursor-pointer"
+                    className="w-full flex items-center justify-between text-left font-pixel text-[7.5px] text-rpg-light-gray hover:text-white py-0.5 cursor-pointer"
                   >
                     <span>{isExpanded ? '▼ CONTENTS' : '▶ CONTENTS'} ({tabCount} URLs)</span>
                     <span>{isExpanded ? '[COLLAPSE]' : '[EXPAND]'}</span>
@@ -181,33 +184,33 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
                   {/* List of URLs inside Tombstone */}
                   {isExpanded && (
-                    <div className="mt-2 space-y-1 pl-2 border-l-2 border-rpg-mid-gray">
+                    <div className="mt-1.5 space-y-1 pl-2 border-l border-rpg-border">
                       {tomb.tabs.map((tab: TombstoneTabItem) => (
                         <div
                           key={tab.cleanUrl}
-                          className="flex items-center justify-between gap-2 p-1 hover:bg-rpg-dark-gray"
+                          className="flex items-center justify-between gap-2 p-1 hover:bg-rpg-surface rounded-none"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="font-dialogue text-base text-rpg-white truncate" title={tab.title}>
+                            <p className="font-sans text-xs text-slate-200 truncate" title={tab.title}>
                               • {tab.title || tab.domain}
                             </p>
-                            <p className="font-dialogue text-xs text-rpg-mid-gray truncate" title={tab.url}>
+                            <p className="font-sans text-[10px] text-rpg-light-gray/70 truncate" title={tab.url}>
                               {tab.url}
                             </p>
                           </div>
-                          <PixelButton
+                          <button
                             onClick={() => actions.reviveTombstoneUrl(tomb.id, tab)}
-                            className="!px-1 !py-0.5 !text-[6px] gap-1 flex items-center"
+                            className="font-pixel text-[7px] bg-emerald-600 hover:bg-emerald-500 text-white px-1.5 py-0.5 uppercase inline-flex items-center gap-0.5 cursor-pointer shrink-0"
                           >
-                            <IconRevive />
-                            <span>[REVIVE]</span>
-                          </PixelButton>
+                            <IconRevive className="text-[10px]" />
+                            <span>REVIVE</span>
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </DialogueBox>
+              </div>
             );
           })}
         </div>

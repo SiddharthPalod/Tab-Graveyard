@@ -1,61 +1,73 @@
 import React from 'react';
-import { QUOTES } from '../tokens';
-import { DialogueBox, TypewriterText } from './RPGPrimitives';
-import { IconSkull } from './GameIcons';
+import type { LevelInfo } from '../../core/telemetry';
+import { TypewriterText } from './RPGPrimitives';
+import { IconSkull, IconSkullhead } from './GameIcons';
 
 interface HeaderProps {
   buriedCount:       number;
   livingCount:       number;
   awakeningMessage?: string;
+  levelInfo?:        LevelInfo;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   buriedCount,
   livingCount,
   awakeningMessage,
+  levelInfo = { level: 1, title: 'Novice Gravedigger', currentXp: 0, nextLevelXp: 50, progress: 0 },
 }) => {
-  const maxSafe   = 15;
-  const hpPercent = Math.max(10, Math.min(100,
-    Math.round(((maxSafe - Math.max(0, livingCount - 5)) / maxSafe) * 100),
-  ));
-
-  const quote = awakeningMessage 
-    ? awakeningMessage 
-    : buriedCount === 0 
-      ? QUOTES.clean 
-      : QUOTES.determination(buriedCount);
+  // Dynamic persona copy
+  let dynamicQuote = '* The graveyard is quiet... peace reigns.';
+  if (awakeningMessage) {
+    dynamicQuote = `* ${awakeningMessage}`;
+  } else if (livingCount >= 18) {
+    dynamicQuote = `* The dead are restless. Your RAM weeps with ${livingCount} open tabs.`;
+  } else if (buriedCount > 30) {
+    dynamicQuote = `* A vast sea of ${buriedCount} souls sleeps beneath the soil.`;
+  } else if (buriedCount > 10) {
+    dynamicQuote = `* Restless spirits wander. ${buriedCount} tabs laid to rest.`;
+  } else if (buriedCount > 0) {
+    dynamicQuote = `* Seeing ${buriedCount} buried tabs fills you with DETERMINATION.`;
+  }
 
   return (
-    <DialogueBox className="mb-2 shrink-0 p-3">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 font-pixel text-[10px] text-rpg-yellow">
-          <IconSkull className="text-xl" />
-          <span className="mt-1">TAB GRAVEYARD</span>
+    <div className="shrink-0 bg-rpg-dark-gray/90 border border-rpg-border rounded-sm p-2 shadow-pixel">
+      {/* Top Stat Row */}
+      <div className="grid grid-cols-[1fr_auto] items-center w-full">
+        <div className="flex items-center gap-1.5">
+          <IconSkull className="text-sm text-rpg-yellow shrink-0" />
+          <span className="font-pixel text-[8.5px] text-rpg-yellow tracking-wide">
+            GRAVEYARD
+          </span>
         </div>
-        <div className="font-pixel text-[10px] text-rpg-soul mt-1">LV 1</div>
-      </div>
-      
-      <div className="text-rpg-white font-dialogue text-lg leading-snug min-h-[44px]">
-        {awakeningMessage ? (
-          <TypewriterText text={`* ${awakeningMessage}`} className="text-rpg-yellow font-bold" />
-        ) : (
-          <TypewriterText text={quote} />
-        )}
+
+        <div
+          className="ml-auto flex items-center gap-1 bg-rpg-surface px-1.5 py-0.5 border border-rpg-border text-[7px] font-pixel text-rpg-monster cursor-help"
+          title={`Level ${levelInfo.level}: ${levelInfo.title} (${levelInfo.currentXp}/${levelInfo.nextLevelXp} XP)`}
+        >
+          <span>LV{levelInfo.level}</span>
+          <span className="text-rpg-light-gray hidden sm:inline">
+            {levelInfo.title}
+          </span>
+          <div className="w-8 h-1 bg-rpg-bg border border-rpg-border shrink-0 ml-0.5">
+            <div
+              className="h-full bg-rpg-monster transition-all"
+              style={{ width: `${levelInfo.progress}%` }}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4 pt-2 border-t-2 border-rpg-mid-gray">
-        <div className="flex items-center gap-2">
-          <span className="font-pixel text-[8px] text-rpg-white mt-0.5">RAM-HP</span>
-          <div className="w-24 h-3 bg-rpg-soul border-2 border-rpg-white flex shadow-[2px_2px_0_#555555]">
-            <div className="h-full bg-rpg-yellow transition-all" style={{ width: `${hpPercent}%` }} />
-          </div>
-          <span className="font-pixel text-[8px] text-rpg-light-gray ml-1">{livingCount} OPEN</span>
+      {/* Dynamic Typewriter Quote (Compact 1-line ticker) */}
+      <div className="mt-1 pt-1 border-t border-rpg-border/60 flex items-center justify-between text-xs min-h-4.5">
+        <div className="font-dialogue text-[13px] text-rpg-light-gray truncate max-w-85">
+          <TypewriterText text={dynamicQuote} speed={25} />
         </div>
-        <div className="flex items-center gap-1 font-pixel text-[8px] text-rpg-monster">
-          <IconSkull className="text-xs" />
-          <span className="mt-0.5">{buriedCount} DEAD</span>
+        <div className="font-pixel flex flex-row items-center gap-1 text-[0.5rem] text-rpg-mid-gray">
+          <IconSkullhead className="text-sm  shrink-0" />
+          <p>{buriedCount}</p>
         </div>
       </div>
-    </DialogueBox>
+    </div>
   );
 };

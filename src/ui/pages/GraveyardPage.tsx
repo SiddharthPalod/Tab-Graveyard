@@ -4,7 +4,7 @@ import { TabItem } from '../components/TabItem';
 import type { TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 import { DialogueBox, PixelButton, TypewriterText, PixelPanel } from '../components/RPGPrimitives';
-import { IconSkull, IconErect, IconCremate } from '../components/GameIcons';
+import { IconErect, IconCremate, IconGrave } from '../components/GameIcons';
 
 interface GraveyardPageProps {
   tabs:         TabViewModel[];
@@ -38,23 +38,23 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
 
   if (loading) {
     return (
-      <DialogueBox className="text-center text-rpg-yellow">
+      <div className="p-3 bg-rpg-dark-gray/90 border border-rpg-border text-center text-rpg-yellow font-dialogue text-base rounded-sm">
         <TypewriterText text={QUOTES.checkingDust} />
-      </DialogueBox>
+      </div>
     );
   }
 
   if (tabs.length === 0) {
     return (
-      <DialogueBox className="text-center space-y-2">
+      <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
-          <IconSkull className="text-4xl" />
+          <IconGrave className="text-4xl" />
         </div>
-        <p className="text-rpg-white">
+        <p className="text-slate-200 font-sans text-xs">
           <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyGraveyard} />
         </p>
-        {!searchQuery && <p className="text-sm text-rpg-mid-gray">{QUOTES.hintBuried}</p>}
-      </DialogueBox>
+        {!searchQuery && <p className="text-[11px] text-rpg-light-gray font-sans">{QUOTES.hintBuried}</p>}
+      </div>
     );
   }
 
@@ -92,29 +92,32 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Top Action & Cleanup Bar */}
-      <PixelPanel className="p-2 mb-2 !border-rpg-white !bg-rpg-bg">
+      {/* Top Action & Cleanup Bar (Sleek, fill-over-outline) */}
+      <div className="p-1.5 mb-1.5 bg-rpg-dark-gray/80 border border-rpg-border rounded-sm">
         {namingOpen ? (
-          <div className="space-y-2">
-            <p className="font-pixel text-[8px] text-rpg-yellow">
+          <div className="space-y-1.5">
+            <p className="font-pixel text-[7.5px] text-rpg-yellow">
               * NAME THIS TOMBSTONE ({selectedTabs.length} GRAVES):
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 placeholder="auto-name (leave blank) or type title..."
-                className="flex-1 bg-rpg-dark-gray border-2 border-rpg-white font-dialogue text-base px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
+                className="flex-1 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
-              <PixelButton onClick={handleConfirmBundle} className="gap-1 flex items-center">
-                <IconErect />
-                <span>[ERECT]</span>
-              </PixelButton>
+              <button 
+                onClick={handleConfirmBundle} 
+                className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer"
+              >
+                <IconErect className="text-xs" />
+                <span>ERECT</span>
+              </button>
               <button
                 onClick={() => setNamingOpen(false)}
-                className="font-pixel text-[8px] text-rpg-mid-gray hover:text-rpg-white px-1 cursor-pointer"
+                className="font-pixel text-[7.5px] text-rpg-mid-gray hover:text-rpg-white px-1 cursor-pointer"
               >
                 CANCEL
               </button>
@@ -126,50 +129,52 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSelectAll}
-                className="font-pixel text-[8px] text-rpg-light-gray hover:text-rpg-yellow cursor-pointer"
+                className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-rpg-yellow cursor-pointer"
               >
                 {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
               </button>
 
               {hasSelection && (
-                <PixelButton
+                <button
                   onClick={() => setNamingOpen(true)}
-                  className="!border-rpg-yellow !text-rpg-yellow hover:!bg-rpg-yellow hover:!text-rpg-bg gap-1 flex items-center"
+                  className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer"
                   title="Bundle selected dead tabs into a permanent Tombstone in Catacombs"
                 >
-                  <IconErect />
+                  <IconErect className="text-xs" />
                   <span>ERECT ({selectedTabs.length})</span>
-                </PixelButton>
+                </button>
               )}
             </div>
 
-            {/* Right: User-Configurable Cremation */}
+            {/* Right: Solid Cremate Action */}
             <div className="flex items-center gap-1 shrink-0">
-              <span className="font-pixel text-[8px] text-rpg-mid-gray">KEEP:</span>
+              <span className="font-pixel text-[7.5px] text-rpg-mid-gray">KEEP:</span>
               <input
                 type="number"
                 min="0"
                 max="500"
                 value={keepCount}
                 onChange={(e) => actions.setKeepCount(parseInt(e.target.value, 10))}
-                className="w-10 bg-rpg-dark-gray border-2 border-rpg-mid-gray font-pixel text-[8px] text-center text-rpg-yellow py-1 outline-none"
+                className="w-10 bg-rpg-bg border border-rpg-border font-pixel text-[7.5px] text-center text-rpg-yellow py-0.5 outline-none"
                 title="Number of newest dead tabs to keep"
               />
-              <PixelButton
+              <button
                 onClick={handleCremate}
                 disabled={cremateCount === 0}
-                className={`flex items-center gap-1 !border-rpg-soul !text-rpg-soul ${
-                  cremateCount === 0 ? 'opacity-40 cursor-not-allowed shadow-none' : 'hover:!bg-rpg-soul hover:!text-rpg-bg shadow-[2px_2px_0_#555555]'
+                className={`font-pixel text-[8px] px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all ${
+                  cremateCount === 0 
+                    ? 'bg-rose-950/40 text-rose-300/40 border border-rose-950/40 cursor-not-allowed' 
+                    : 'bg-rose-900/90 hover:bg-rose-700 text-rose-100 border border-rose-500/50 shadow-pixel'
                 }`}
                 title={`Keep the newest ${keepCount} tabs, delete the oldest ${cremateCount} tabs (${cremateCount}/${totalDead})`}
               >
-                <IconCremate />
-                <span>CREMATE ({cremateCount}/{totalDead})</span>
-              </PixelButton>
+                <IconCremate className="text-xs" />
+                <span>CREMATE ({cremateCount})</span>
+              </button>
             </div>
           </div>
         )}
-      </PixelPanel>
+      </div>
 
       {/* List of Buried Tabs */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1">

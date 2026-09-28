@@ -12,7 +12,6 @@ import { Footer }        from './ui/components/Footer';
 import { GraveyardPage } from './ui/pages/GraveyardPage';
 import { CatacombsPage } from './ui/pages/CatacombsPage';
 import { LivingPage }    from './ui/pages/LivingPage';
-import { PixelPanel }    from './ui/components/RPGPrimitives';
 
 export const App: React.FC = () => {
   const [activePage, setActivePage] = useState<ActivePage>('graveyard');
@@ -34,6 +33,7 @@ export const App: React.FC = () => {
     hasActiveFilters,
     keepCount,
     cremateCount,
+    levelInfo,
     latestAwakening,
     loading,
     actions,
@@ -41,14 +41,15 @@ export const App: React.FC = () => {
 
   return (
     <div className={cls.shell}>
-      {/* Top Dialog / System Header */}
+      {/* Top Dialog / System Header (Compact & with Level info) */}
       <Header
         buriedCount={allBuriedTabs.length}
         livingCount={allLivingTabs.length}
         awakeningMessage={latestAwakening}
+        levelInfo={levelInfo}
       />
 
-      {/* Main Navigation */}
+      {/* Main Navigation (Sleek Horizontal Segmented Control) */}
       <BattleNav
         activePage={activePage}
         onSelectPage={setActivePage}
@@ -57,58 +58,54 @@ export const App: React.FC = () => {
         livingCount={allLivingTabs.length}
       />
       
-      {/* Search & Filters */}
-      <PixelPanel className="shrink-0 p-0 border-rpg-white mb-2">
-        <SearchBar
-          filters={filters}
-          activeFilterCount={activeFilterCount}
-          hasActiveFilters={hasActiveFilters}
-          onChangeFilters={actions.setFilter}
-          onResetFilters={actions.resetFilters}
-          availableDomains={topDomains}
-        />
-      </PixelPanel>
+      {/* Search & Filters (Clean, unnested) */}
+      <SearchBar
+        filters={filters}
+        activeFilterCount={activeFilterCount}
+        hasActiveFilters={hasActiveFilters}
+        onChangeFilters={actions.setFilter}
+        onResetFilters={actions.resetFilters}
+        availableDomains={topDomains}
+      />
 
-      {/* Viewport / Content List */}
-      <PixelPanel className="flex-1 flex flex-col p-0 overflow-hidden border-rpg-white bg-rpg-bg">
-        <div className="flex-1 overflow-y-auto p-2" id="viewport">
-          {activePage === 'graveyard' && (
-            <GraveyardPage
-              tabs={filteredBuriedTabs}
-              searchQuery={filters.query || ''}
-              loading={loading}
-              hoveredUrl={hoveredUrl}
-              onHover={setHoveredUrl}
-              keepCount={keepCount}
-              cremateCount={cremateCount}
-              totalDead={allBuriedTabs.length}
-              actions={actions}
-            />
-          )}
+      {/* Main Content Area (Unnested, maximum vertical space for tabs) */}
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden pt-1">
+        {activePage === 'graveyard' && (
+          <GraveyardPage
+            tabs={filteredBuriedTabs}
+            searchQuery={filters.query || ''}
+            loading={loading}
+            hoveredUrl={hoveredUrl}
+            onHover={setHoveredUrl}
+            keepCount={keepCount}
+            cremateCount={cremateCount}
+            totalDead={allBuriedTabs.length}
+            actions={actions}
+          />
+        )}
 
-          {activePage === 'catacombs' && (
-            <CatacombsPage
-              tombstones={filteredTombstones}
-              temporalSessions={filteredTemporalSessions}
-              searchQuery={filters.query || ''}
-              loading={loading}
-              actions={actions}
-            />
-          )}
+        {activePage === 'catacombs' && (
+          <CatacombsPage
+            tombstones={filteredTombstones}
+            temporalSessions={filteredTemporalSessions}
+            searchQuery={filters.query || ''}
+            loading={loading}
+            actions={actions}
+          />
+        )}
 
-          {activePage === 'living' && (
-            <LivingPage
-              tabs={filteredLivingTabs}
-              archetypes={archetypes}
-              searchQuery={filters.query || ''}
-              loading={loading}
-              hoveredUrl={hoveredUrl}
-              onHover={setHoveredUrl}
-              actions={actions}
-            />
-          )}
-        </div>
-      </PixelPanel>
+        {activePage === 'living' && (
+          <LivingPage
+            tabs={filteredLivingTabs}
+            archetypes={archetypes}
+            searchQuery={filters.query || ''}
+            loading={loading}
+            hoveredUrl={hoveredUrl}
+            onHover={setHoveredUrl}
+            actions={actions}
+          />
+        )}
+      </main>
 
       {/* Bottom Status / Tools */}
       <Footer
@@ -122,4 +119,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-

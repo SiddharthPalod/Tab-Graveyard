@@ -11,6 +11,7 @@ import {
   GiMirrorMirror,
   GiMagnifyingGlass,
   GiSkullCrossedBones,
+  GiSkullCrack,
   GiCoffin,
   GiMimicChest,
   GiMagicPotion,
@@ -34,6 +35,7 @@ export const IconHeart = (props: IconProps) => <GiHearts {...props} />;
 export const IconMirror = (props: IconProps) => <GiMirrorMirror {...props} />;
 export const IconSearch = (props: IconProps) => <GiMagnifyingGlass {...props} />;
 export const IconSkull = (props: IconProps) => <GiSkullCrossedBones {...props} />;
+export const IconSkullhead = (props: IconProps) => <GiSkullCrack {...props} />;
 export const IconCoffin = (props: IconProps) => <GiCoffin {...props} />;
 export const IconMimic = (props: IconProps) => <GiMimicChest {...props} />;
 export const IconMagic = (props: IconProps) => <GiMagicPotion {...props} />;

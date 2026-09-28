@@ -25,6 +25,13 @@ import {
   filterTombstones,
   filterTemporalSessions,
 } from '../core/searchUtils';
+import {
+  computeLevelInfo,
+  loadTelemetry,
+  recordTelemetryEvent,
+  LevelInfo,
+  TelemetryStats,
+} from '../core/telemetry';
 
 export interface TabActions {
   revive:                       (tab: TabRecord) => Promise<void>;
@@ -77,6 +84,9 @@ export interface TabStore {
   keepCount:                number;
   cremateCount:             number;
 
+  // RPG Level Progression & Telemetry
+  levelInfo:                LevelInfo;
+
   latestAwakening?:         string;
   loading:                  boolean;
   actions:                  TabActions;
@@ -89,13 +99,25 @@ export function useTabs(): TabStore {
   const [awakening, setAwakening]               = useState<string | null>(null);
   const [loading, setLoading]                   = useState(true);
   const [keepCount, setKeepCountState]          = useState<number>(20);
+  const [telemetry, setTelemetry]               = useState<TelemetryStats>({
+    tabsPurged: 0,
+    tabsRevived: 0,
+    tabsSwept: 0,
+    tombstonesCreated: 0,
+  });
   const [filters, setFilters]                   = useState<FilterOptions>({
     query:  '',
     sortBy: 'recent',
   });
 
-  // Load user's saved retention preference from chrome.storage
+  const refreshTelemetry = useCallback(async () => {
+    const stats = await loadTelemetry();
+    setTelemetry(stats);
+  }, []);
+
+  // Load user's saved retention preference and telemetry from storage
   useEffect(() => {
+    refreshTelemetry();
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.get(['graveyardKeepCount'], (res) => {
         if (typeof res.graveyardKeepCount === 'number') {
@@ -103,7 +125,7 @@ export function useTabs(): TabStore {
         }
       });
     }
-  }, []);
+  }, [refreshTelemetry]);
 
   const setKeepCount = useCallback((val: number) => {
     const num = Math.max(0, isNaN(val) ? 0 : val);
@@ -115,6 +137,7 @@ export function useTabs(): TabStore {
 
   const loadData = useCallback(async () => {
     try {
+      await refreshTelemetry();
       const now     = Date.now();
       const records = await db.tabs.toArray();
       const tombs   = await db.tombstones.toArray();
@@ -286,6 +309,10 @@ export function useTabs(): TabStore {
     return Math.max(0, allBuriedTabs.length - keepCount);
   }, [allBuriedTabs.length, keepCount]);
 
+  const levelInfo = useMemo(() => {
+    return computeLevelInfo(telemetry, allBuriedTabs.length);
+  }, [telemetry, allBuriedTabs.length]);
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
   const setFilter = useCallback((update: Partial<FilterOptions>) => {
@@ -299,11 +326,13 @@ export function useTabs(): TabStore {
   const revive = async (tab: TabRecord) => {
     const newTab = await chrome.tabs.create({ url: tab.url, active: true });
     await db.upsertTab({ url: tab.url, title: tab.title, domain: tab.domain, tabId: newTab.id, status: 'alive' });
+    await recordTelemetryEvent('revive', 1);
     await loadData();
   };
 
   const purge = async (cleanUrl: string) => {
     await db.tabs.delete(cleanUrl);
+    await recordTelemetryEvent('purge', 1);
     await loadData();
   };
 
@@ -313,6 +342,7 @@ export function useTabs(): TabStore {
     } else {
       await db.tabs.update(tab.cleanUrl, { status: 'dead' });
     }
+    await recordTelemetryEvent('sweep', 1);
     await loadData();
   };
 
@@ -345,6 +375,7 @@ export function useTabs(): TabStore {
 
     const title = customTitle?.trim() || generateTombstoneTitle(items);
     await db.createTombstone(title, items);
+    await recordTelemetryEvent('tombstone', 1);
 
     // Close all open tabs in Chrome
     const tabIdsToClose = selectedTabs.map((t) => t.tabId).filter((id): id is number => typeof id === 'number');
@@ -379,6 +410,7 @@ export function useTabs(): TabStore {
     }
 
     await db.deleteTombstone(tombstone.id);
+    await recordTelemetryEvent('revive', tombstone.tabs.length);
     await loadData();
   };
 
@@ -387,6 +419,7 @@ export function useTabs(): TabStore {
    */
   const shatterTombstone = async (id: string) => {
     await db.deleteTombstone(id);
+    await recordTelemetryEvent('purge', 1);
     await loadData();
   };
 
@@ -403,6 +436,7 @@ export function useTabs(): TabStore {
       status: 'alive',
     });
     await db.removeTabFromTombstone(tombstoneId, item.cleanUrl);
+    await recordTelemetryEvent('revive', 1);
     await loadData();
   };
 
@@ -422,6 +456,7 @@ export function useTabs(): TabStore {
 
     const title = customTitle?.trim() || generateTombstoneTitle(items);
     await db.bundleDeadTabsToTombstone(title, items);
+    await recordTelemetryEvent('tombstone', 1);
     await loadData();
   };
 
@@ -432,6 +467,9 @@ export function useTabs(): TabStore {
   const cremateOldest = async (limitCount?: number) => {
     const targetKeep = typeof limitCount === 'number' ? limitCount : keepCount;
     const deletedCount = await db.cremateOldestDead(targetKeep);
+    if (deletedCount > 0) {
+      await recordTelemetryEvent('purge', deletedCount);
+    }
     await loadData();
     return deletedCount;
   };
@@ -441,10 +479,11 @@ export function useTabs(): TabStore {
    * Closes all tabs belonging to that archetype in Chrome and marks them dead.
    */
   const sweepByArchetype = async (archetype: TabArchetype) => {
-    const targets = archetypes[archetype];
-    if (!targets || targets.length === 0) return;
+    const targetTabs = archetypes[archetype];
+    const tabIds = targetTabs
+      .map((t) => t.tabId)
+      .filter((id): id is number => typeof id === 'number');
 
-    const tabIds = targets.map((t) => t.tabId).filter((id): id is number => typeof id === 'number');
     if (tabIds.length > 0) {
       try {
         await chrome.tabs.remove(tabIds);
@@ -452,9 +491,15 @@ export function useTabs(): TabStore {
         console.warn('[useTabs] Some tabs were already closed:', err);
       }
     }
-    for (const t of targets) {
-      await db.markTabDeadByUrl(t.cleanUrl);
+
+    for (const t of targetTabs) {
+      await db.tabs.update(t.cleanUrl, { status: 'dead', tabId: undefined });
     }
+
+    if (targetTabs.length > 0) {
+      await recordTelemetryEvent('sweep', targetTabs.length);
+    }
+
     await loadData();
   };
 
@@ -529,6 +574,7 @@ export function useTabs(): TabStore {
     hasActiveFilters,
     keepCount,
     cremateCount,
+    levelInfo,
     latestAwakening: awakening || undefined,
     loading,
     actions,
