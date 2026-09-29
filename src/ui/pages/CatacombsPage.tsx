@@ -4,15 +4,6 @@ import type { TombstoneRecord, TombstoneTabItem } from '../../core/db';
 import type { TemporalSession } from '../../core/sessionUtils';
 import type { TabActions } from '../../store/useTabs';
 import { TypewriterText } from '../components/RPGPrimitives';
-import {
-  IconTomb,
-  IconRevive,
-  IconPurge,
-  IconMagic,
-  IconBurger,
-  IconFishBucket,
-  IconBubbles,
-} from '../components/GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 interface CatacombsPageProps {
@@ -39,7 +30,12 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
   actions,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
+
+  const EmptyCatacombsIcon = theme.icons.emptyCatacombs;
+  const VaultIcon = theme.icons.vault;
+  const TemporalIcon = theme.icons.temporal;
+  const ReviveIcon = theme.icons.revive;
+  const PurgeIcon = theme.icons.purge;
 
   // Track which tombstones and sessions are expanded in UI
   const [expandedIds, setExpandedIds]               = useState<Record<string, boolean>>({});
@@ -67,11 +63,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
     return (
       <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
-          {isSponge ? (
-            <IconBurger className="text-4xl text-[#F9E03B]" />
-          ) : (
-            <IconTomb className="text-4xl" />
-          )}
+          <EmptyCatacombsIcon className="text-4xl text-rpg-yellow" />
         </div>
         <p className="text-slate-200 font-sans text-xs">
           <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyCatacombs} />
@@ -89,11 +81,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
       {tombstones.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 px-1">
-            {isSponge ? (
-              <IconBurger className="text-xs text-[#F9E03B]" />
-            ) : (
-              <IconTomb className="text-xs text-rpg-yellow" />
-            )}
+            <VaultIcon className="text-xs text-rpg-yellow" />
             <span className="font-pixel text-[8px] text-rpg-yellow">
               {theme.catacombs.tombstoneSectionTitle}
             </span>
@@ -116,11 +104,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                 > 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 text-rpg-yellow">
-                      {isSponge ? (
-                        <IconBurger className="text-sm shrink-0 text-[#F9E03B]" />
-                      ) : (
-                        <IconTomb className="text-sm shrink-0" />
-                      )}
+                      <VaultIcon className="text-sm shrink-0" />
                       <h3 className="font-sans text-[13px] truncate font-semibold text-slate-100" title={tomb.title}>
                         {tomb.title}
                       </h3>
@@ -136,14 +120,14 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                       onClick={() => actions.resurrectTombstone(tomb)} 
                       className={theme.cls.btn.revive}
                     >
-                      {isSponge ? <IconBurger className="text-xs" /> : <IconRevive className="text-xs" />}
+                      <ReviveIcon className="text-xs" />
                       <span>{theme.actions.resurrectSession}</span>
                     </button>
                     <button
                       onClick={() => actions.shatterTombstone(tomb.id)}
                       className={theme.cls.btn.danger}
                     >
-                      {isSponge ? <IconFishBucket className="text-xs" /> : <IconPurge className="text-xs" />}
+                      <PurgeIcon className="text-xs" />
                       <span>{theme.actions.purgeSession}</span>
                     </button>
                   </div>
@@ -170,7 +154,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                             onClick={() => actions.reviveTombstoneUrl(tomb.id, tab)}
                             className={theme.cls.btn.revive}
                           >
-                            {isSponge ? <IconBurger className="text-[10px]" /> : <IconRevive className="text-[10px]" />}
+                            <ReviveIcon className="text-[10px]" />
                             <span>{theme.actions.revive}</span>
                           </button>
                         </div>
@@ -188,11 +172,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
       {temporalSessions.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 px-1">
-            {isSponge ? (
-              <IconBubbles className="text-xs text-[#00A3E0]" />
-            ) : (
-              <IconMagic className="text-xs text-rpg-magic" />
-            )}
+            <TemporalIcon className="text-xs text-rpg-magic" />
             <span className="font-pixel text-[8px] text-rpg-magic">
               {theme.catacombs.temporalSectionTitle}
             </span>
@@ -214,11 +194,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <h4 className="font-sans text-[12.5px] text-rpg-magic truncate font-semibold flex items-center gap-1">
-                      {isSponge ? (
-                        <IconBubbles className="text-xs shrink-0" />
-                      ) : (
-                        <IconMagic className="text-xs shrink-0" />
-                      )}
+                      <TemporalIcon className="text-xs shrink-0" />
                       <span>{sess.title}</span>
                     </h4>
                     <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
@@ -234,7 +210,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                       className={theme.cls.btn.revive}
                       title="Reopen all tabs from this session in Chrome"
                     >
-                      {isSponge ? <IconBurger className="text-xs shrink-0" /> : <IconRevive className="text-xs shrink-0" />}
+                      <ReviveIcon className="text-xs shrink-0" />
                       <span>{theme.actions.resurrectSession}</span>
                     </button>
                     <button
@@ -242,7 +218,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                       className={theme.cls.btn.danger}
                       title="Permanently purge this session and its tabs"
                     >
-                      {isSponge ? <IconFishBucket className="text-xs shrink-0" /> : <IconPurge className="text-xs shrink-0" />}
+                      <PurgeIcon className="text-xs shrink-0" />
                       <span>{theme.actions.purgeSession}</span>
                     </button>
                   </div>
@@ -269,7 +245,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                           className={theme.cls.btn.revive}
                           title="Revive this tab into Chrome"
                         >
-                          {isSponge ? <IconBurger className="text-[10px]" /> : <IconRevive className="text-[10px]" />}
+                          <ReviveIcon className="text-[10px]" />
                           <span>{theme.actions.revive}</span>
                         </button>
                       </div>

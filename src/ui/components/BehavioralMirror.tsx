@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TabArchetype, TabViewModel, ARCHETYPE_META } from '../../core/behavior';
 import type { TabRecord } from '../../core/db';
 import type { TabActions } from '../../store/useTabs';
-import { IconMirror, IconSweep, IconTomb, IconBurger, IconFishingNet } from './GameIcons';
+import { IconMirror } from './GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 interface BehavioralMirrorProps {
@@ -15,10 +15,12 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
   actions,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
 
   const [isOpen, setIsOpen]                 = useState(false);
   const [selectedArch, setSelectedArch]     = useState<TabArchetype | null>(null);
+
+  const SweepIcon = theme.icons.sweep;
+  const VaultIcon = theme.icons.vault;
 
   // List archetypes that currently have at least 1 open tab
   const activeArchetypes = (Object.keys(archetypes) as TabArchetype[]).filter(
@@ -96,7 +98,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
                   title="Close all tabs of this archetype in Chrome and store them"
                   className={theme.cls.btn.sweep}
                 >
-                  {isSponge ? <IconFishingNet className="text-xs" /> : <IconSweep className="text-xs" />}
+                  <SweepIcon className="text-xs" />
                   <span>{theme.actions.sweep} ({currentCount})</span>
                 </button>
                 <button
@@ -104,8 +106,8 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
                   className={theme.cls.btn.accent}
                   title="Collapse all tabs of this profile into a vault or tombstone"
                 >
-                  {isSponge ? <IconBurger className="text-xs" /> : <IconTomb className="text-xs" />}
-                  <span>{isSponge ? 'TO VAULT' : 'TO TOMBSTONE'}</span>
+                  <VaultIcon className="text-xs" />
+                  <span>{theme.labels.collapseArchetype}</span>
                 </button>
               </div>
             </div>

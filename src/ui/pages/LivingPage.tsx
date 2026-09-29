@@ -4,7 +4,6 @@ import { BehavioralMirror } from '../components/BehavioralMirror';
 import type { TabArchetype, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 import { TypewriterText } from '../components/RPGPrimitives';
-import { IconGhost, IconErect, IconJellyfish, IconBurger } from '../components/GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 interface LivingPageProps {
@@ -35,7 +34,9 @@ export const LivingPage: React.FC<LivingPageProps> = ({
   actions,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
+
+  const EmptyLivingIcon = theme.icons.emptyLiving;
+  const VaultIcon = theme.icons.vault;
 
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen]     = useState(false);
@@ -53,11 +54,7 @@ export const LivingPage: React.FC<LivingPageProps> = ({
     return (
       <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
-          {isSponge ? (
-            <IconJellyfish className="text-4xl text-[#FFB2B2]" />
-          ) : (
-            <IconGhost className="text-4xl" />
-          )}
+          <EmptyLivingIcon className="text-4xl" />
         </div>
         <p className="text-slate-200 font-sans text-xs">
           <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyLiving} />
@@ -119,7 +116,7 @@ export const LivingPage: React.FC<LivingPageProps> = ({
                 onClick={handleConfirmCollapse} 
                 className={theme.cls.btn.accent}
               >
-                {isSponge ? <IconBurger className="text-xs" /> : <IconErect className="text-xs" />}
+                <VaultIcon className="text-xs" />
                 <span>{theme.actions.bury}</span>
               </button>
               <button
@@ -144,7 +141,7 @@ export const LivingPage: React.FC<LivingPageProps> = ({
               className={theme.cls.btn.accent}
               title="Collapse open tabs in Chrome to free RAM"
             >
-              {isSponge ? <IconBurger className="text-xs" /> : <IconErect className="text-xs" />}
+              <VaultIcon className="text-xs" />
               <span>{hasSelection ? theme.actions.collapse(selectedTabs.length) : theme.actions.collapseAll(tabs.length)}</span>
             </button>
           </div>

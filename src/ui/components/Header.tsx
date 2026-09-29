@@ -1,7 +1,6 @@
 import React from 'react';
 import type { LevelInfo } from '../../core/telemetry';
 import { TypewriterText } from './RPGPrimitives';
-import { IconSkull, IconSkullhead, IconAnchor, IconBurger } from './GameIcons';
 import { ThemeSelector } from './ThemeSelector';
 import { useTheme } from '../themes/useTheme';
 
@@ -28,7 +27,8 @@ export const Header: React.FC<HeaderProps> = ({
   });
 
   const displayLevelTitle = theme.header.levelTitle(levelInfo.level, levelInfo.title);
-  const isSponge = theme.id === 'spongebob';
+  const HeaderIcon = theme.icons.header;
+  const CounterIcon = theme.icons.counter;
 
   return (
     <div className="shrink-0 bg-rpg-dark-gray border border-rpg-border rounded-sm p-2 shadow-pixel">
@@ -36,11 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center justify-between gap-1 w-full">
         {/* Left: Theme Title & Dynamic Theme Selector Dropdown */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {isSponge ? (
-            <IconAnchor className="text-sm text-[#0284C7] shrink-0" />
-          ) : (
-            <IconSkull className="text-sm text-rpg-yellow shrink-0" />
-          )}
+          <HeaderIcon className="text-sm text-rpg-yellow shrink-0" />
           <span className="font-pixel text-[8.5px] text-rpg-yellow tracking-wide">
             {theme.header.title}
           </span>
@@ -72,11 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
           <TypewriterText text={dynamicQuote} speed={25} />
         </div>
         <div className="font-pixel flex flex-row items-center gap-1 text-[0.5rem] text-rpg-mid-gray shrink-0">
-          {isSponge ? (
-            <IconBurger className="text-sm shrink-0 text-[#0284C7]" />
-          ) : (
-            <IconSkullhead className="text-sm shrink-0" />
-          )}
+          <CounterIcon className="text-sm shrink-0" />
           <p>{buriedCount}</p>
         </div>
       </div>

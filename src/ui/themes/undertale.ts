@@ -1,4 +1,18 @@
 import { ThemePersonality } from './types';
+import {
+  IconSkull,
+  IconSkullhead,
+  IconGrave,
+  IconTomb,
+  IconGhost,
+  IconRevive,
+  IconPurge,
+  IconSweep,
+  IconErect,
+  IconCremate,
+  IconMagic,
+  IconHeart,
+} from '../components/GameIcons';
 
 export const undertaleTheme: ThemePersonality = {
   id: 'undertale',
@@ -110,6 +124,53 @@ export const undertaleTheme: ThemePersonality = {
       description: 'Active workhorse currently being read or edited.',
       badgeCls:    'text-yellow-300 border-yellow-400',
     },
+  },
+
+  icons: {
+    header:         IconSkull,
+    counter:        IconSkullhead,
+    navGraveyard:   IconGrave,
+    navCatacombs:   IconTomb,
+    navLiving:      IconGhost,
+    revive:         IconRevive,
+    purge:          IconPurge,
+    sweep:          IconSweep,
+    vault:          IconErect,
+    cremate:        IconCremate,
+    temporal:       IconMagic,
+    emptyGraveyard: IconGrave,
+    emptyCatacombs: IconTomb,
+    emptyLiving:    IconGhost,
+    tabDeadHover:   IconGhost,
+    tabAliveHover:  IconHeart,
+  },
+
+  palette: {
+    bg:                  '#171817',
+    white:               '#E3E3DE',
+    darkGray:            '#222321',
+    surface:             '#2B2C29',
+    surfaceHover:        '#353633',
+    border:              '#464743',
+    midGray:             '#666762',
+    lightGray:           '#A3A49D',
+    soul:                '#FF4D5E',
+    determination:       '#FF6B6B',
+    monster:             '#A578FF',
+    magic:               '#569BFF',
+    heart:               '#2ED573',
+    yellow:              '#FFD32A',
+    shadow:              '2px 2px 0 #0D0C13',
+    shadowHover:         '1px 1px 0 #0D0C13',
+    scrollbarTrack:      '#14131D',
+    scrollbarThumb:      '#554F70',
+    scrollbarThumbHover: '#FFD32A',
+  },
+
+  labels: {
+    stateDead:         'Buried',
+    stateAlive:        'Resting',
+    collapseArchetype: 'TO TOMBSTONE',
   },
 
   quotes: {

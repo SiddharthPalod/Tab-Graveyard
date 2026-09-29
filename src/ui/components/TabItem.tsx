@@ -2,17 +2,6 @@ import React from 'react';
 import { formatRelativeTime, formatActiveDuration } from '../../core/lifecycle';
 import { ARCHETYPE_META, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
-import {
-  IconHeart,
-  IconRevive,
-  IconPurge,
-  IconSweep,
-  IconGhost,
-  IconBurger,
-  IconFishBucket,
-  IconFishingNet,
-  IconJellyfish,
-} from './GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 interface TabItemProps {
@@ -33,12 +22,17 @@ export const TabItem: React.FC<TabItemProps> = ({
   onToggleSelect,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
 
   const isDead = tab.status === 'dead';
   const badgeCls = `${theme.cls.badgeBase} ${theme.cls.badge[tab.status]}`;
   const archMeta = theme.archetypes?.[tab.archetype] || ARCHETYPE_META[tab.archetype];
   const metamorphosis = tab.metamorphosis;
+
+  const DeadHoverIcon = theme.icons.tabDeadHover;
+  const AliveHoverIcon = theme.icons.tabAliveHover;
+  const ReviveIcon = theme.icons.revive;
+  const PurgeIcon = theme.icons.purge;
+  const SweepIcon = theme.icons.sweep;
 
   return (
     <div
@@ -75,17 +69,9 @@ export const TabItem: React.FC<TabItemProps> = ({
           ) : (
             <span className="flex items-center justify-center w-4 mt-0.5 shrink-0">
               {isHovered && isDead ? (
-                isSponge ? (
-                  <IconAnchor className="text-xs text-[#0284C7] animate-bounce" />
-                ) : (
-                  <IconGhost className="text-xs text-rpg-monster animate-ghost" />
-                )
+                <DeadHoverIcon className="text-xs text-rpg-monster animate-ghost" />
               ) : isHovered ? (
-                isSponge ? (
-                  <IconJellyfish className="text-[10px] text-[#E11D48] animate-pulse" />
-                ) : (
-                  <IconHeart className="text-[10px] text-rpg-soul animate-pulse" />
-                )
+                <AliveHoverIcon className="text-[10px] text-rpg-soul animate-pulse" />
               ) : (
                 <span className="font-pixel text-[7.5px] text-rpg-mid-gray">
                   *
@@ -149,7 +135,7 @@ export const TabItem: React.FC<TabItemProps> = ({
       {/* Stats & Solid Action Buttons Row */}
       <div className="flex items-center justify-between pt-1.5 border-t border-rpg-border/60">
         <span className="font-sans text-[10.5px] text-rpg-light-gray/70 truncate max-w-[220px]">
-          {isDead ? (isSponge ? 'Sunken' : 'Buried') : (isSponge ? 'Swimming' : 'Resting')}{' '}
+          {isDead ? theme.labels.stateDead : theme.labels.stateAlive}{' '}
           {formatRelativeTime(tab.lastActivatedAt)}{' '}
           (Visits: {tab.activationCount})
         </span>
@@ -166,7 +152,7 @@ export const TabItem: React.FC<TabItemProps> = ({
                 className={theme.cls.btn.revive}
                 title={theme.actions.reviveTooltip}
               >
-                {isSponge ? <IconBurger className="text-xs" /> : <IconRevive className="text-xs" />}
+                <ReviveIcon className="text-xs" />
                 <span>{theme.actions.revive}</span>
               </button>
 
@@ -175,7 +161,7 @@ export const TabItem: React.FC<TabItemProps> = ({
                 className={theme.cls.btn.danger}
                 title={theme.actions.purgeTooltip}
               >
-                {isSponge ? <IconFishBucket className="text-xs" /> : <IconPurge className="text-xs" />}
+                <PurgeIcon className="text-xs" />
                 <span>{theme.actions.purge}</span>
               </button>
             </>
@@ -185,7 +171,7 @@ export const TabItem: React.FC<TabItemProps> = ({
               className={theme.cls.btn.sweep}
               title={theme.actions.sweepTooltip}
             >
-              {isSponge ? <IconFishingNet className="text-xs" /> : <IconSweep className="text-xs" />}
+              <SweepIcon className="text-xs" />
               <span>{theme.actions.sweep}</span>
             </button>
           )}

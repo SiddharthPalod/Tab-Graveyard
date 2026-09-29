@@ -1,6 +1,5 @@
 import React from 'react';
 import { ActivePage } from './BattleNav';
-import { IconRevive, IconBurger } from './GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 interface FooterProps {
@@ -21,13 +20,13 @@ export const Footer: React.FC<FooterProps> = ({
   onSimulateAging,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
+  const ReviveIcon = theme.icons.revive;
 
   return (
     <footer className="flex items-center justify-between border-t border-rpg-border/70 pt-1.5 mt-auto shrink-0 text-[8px]">
       {activePage === 'graveyard' && hasBuried ? (
         <button onClick={onReviveAll} className={theme.cls.btn.revive} title="Revive the most recent buried tabs">
-          {isSponge ? <IconBurger className="text-xs" /> : <IconRevive className="text-xs" />}
+          <ReviveIcon className="text-xs" />
           <span>{theme.actions.reviveAll}</span>
         </button>
       ) : activePage === 'living' && hasLiving ? (

@@ -1,5 +1,3 @@
-import React from 'react';
-import { IconGrave, IconTomb, IconGhost, IconAnchor, IconBurger, IconJellyfish } from './GameIcons';
 import { useTheme } from '../themes/useTheme';
 
 export type ActivePage = 'graveyard' | 'catacombs' | 'living';
@@ -20,14 +18,17 @@ export const BattleNav: React.FC<BattleNavProps> = ({
   livingCount,
 }) => {
   const { theme } = useTheme();
-  const isSponge = theme.id === 'spongebob';
+
+  const GraveyardIcon = theme.icons.navGraveyard;
+  const CatacombsIcon = theme.icons.navCatacombs;
+  const LivingIcon = theme.icons.navLiving;
 
   const tabs = [
     {
       id: 'graveyard' as const,
       label: theme.nav.graveyard.label,
       count: buriedCount,
-      icon: isSponge ? <IconAnchor className="text-xs" /> : <IconGrave className="text-xs" />,
+      icon: <GraveyardIcon className="text-xs" />,
       activeColor: 'text-rpg-yellow border-rpg-yellow bg-rpg-surface',
       tooltip: theme.nav.graveyard.tooltip,
     },
@@ -35,7 +36,7 @@ export const BattleNav: React.FC<BattleNavProps> = ({
       id: 'catacombs' as const,
       label: theme.nav.catacombs.label,
       count: tombstoneCount,
-      icon: isSponge ? <IconBurger className="text-xs" /> : <IconTomb className="text-xs" />,
+      icon: <CatacombsIcon className="text-xs" />,
       activeColor: 'text-rpg-magic border-rpg-magic bg-rpg-surface',
       tooltip: theme.nav.catacombs.tooltip,
     },
@@ -43,7 +44,7 @@ export const BattleNav: React.FC<BattleNavProps> = ({
       id: 'living' as const,
       label: theme.nav.living.label,
       count: livingCount,
-      icon: isSponge ? <IconJellyfish className="text-xs" /> : <IconGhost className="text-xs" />,
+      icon: <LivingIcon className="text-xs" />,
       activeColor: 'text-rpg-heart border-rpg-heart bg-rpg-surface',
       tooltip: theme.nav.living.tooltip,
     },

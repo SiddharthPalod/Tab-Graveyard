@@ -50,70 +50,20 @@
     background-size: 100% 2px, 3px 100%;
   }
 
-  /* Pixel RPG shadow utility */
+  /* Pixel RPG shadow utility - purely dynamic via CSS variables */
   .shadow-pixel {
-    box-shadow: 2px 2px 0 #0D0C13;
+    box-shadow: var(--rpg-shadow, 2px 2px 0 #0D0C13);
   }
   
   .shadow-pixel-hover {
-    box-shadow: 1px 1px 0 #0D0C13;
+    box-shadow: var(--rpg-shadow-hover, 1px 1px 0 #0D0C13);
   }
 
-  /* Retro styled vertical scrollbar */
+  /* Retro styled vertical scrollbar - purely dynamic via CSS variables */
   ::-webkit-scrollbar       { width: 5px; height: 0; }
-  ::-webkit-scrollbar-track { background: #14131D; border-left: 1px solid #34304A; }
-  ::-webkit-scrollbar-thumb { background: #554F70; border-radius: 1px; }
-  ::-webkit-scrollbar-thumb:hover { background: #FFD32A; }
-}
-
-/* ── SpongeBob Light Theme (Bikini Bottom Daytime Aesthetic) ─────────────── */
-:root[data-theme="spongebob"],
-body[data-theme="spongebob"],
-[data-theme="spongebob"] {
-  /* Crisp Light Oceanic & Sandy Daytime Palette */
-  --color-rpg-bg:            #F0F8FF; /* Light Sunny Ocean Breeze (AliceBlue) */
-  --color-rpg-white:         #0F172A; /* Deep slate high-contrast primary text */
-  --color-rpg-dark-gray:     #FFFFFF; /* Crisp clean white cards and surfaces */
-  --color-rpg-surface:       #E0F2FE; /* Sky blue subtle hover surface */
-  --color-rpg-surface-hover: #BAE6FD; /* Sky-200 active hover */
-  --color-rpg-border:        #38BDF8; /* Ocean Blue border */
-  --color-rpg-mid-gray:      #7B4B3A; /* Krabby Patty Brown */
-  --color-rpg-light-gray:    #475569; /* Slate-600 readable secondary text */
-
-  /* SpongeBob Accents */
-  --color-rpg-soul:          #E11D48; /* Vibrant Patrick Coral/Pink */
-  --color-rpg-determination: #D97706; /* Warm Krusty golden tone */
-  --color-rpg-monster:       #7C3AED; /* Jellyfish purple */
-  --color-rpg-magic:         #0284C7; /* Ocean Blue */
-  --color-rpg-heart:         #16A34A; /* Seaweed green */
-  --color-rpg-yellow:        #F9E03B; /* SpongeBob Yellow */
-}
-
-body[data-theme="spongebob"] {
-  background-color: #F0F8FF;
-  color: #0F172A;
-}
-
-[data-theme="spongebob"] .shadow-pixel {
-  box-shadow: 2px 2px 0 rgba(0, 163, 224, 0.35);
-}
-
-[data-theme="spongebob"] .shadow-pixel-hover {
-  box-shadow: 1px 1px 0 rgba(0, 163, 224, 0.35);
-}
-
-[data-theme="spongebob"] ::-webkit-scrollbar-track {
-  background: #F0F8FF;
-  border-left: 1px solid #BAE6FD;
-}
-
-[data-theme="spongebob"] ::-webkit-scrollbar-thumb {
-  background: #38BDF8;
-  border-radius: 2px;
-}
-
-[data-theme="spongebob"] ::-webkit-scrollbar-thumb:hover {
-  background: #F9E03B;
+  ::-webkit-scrollbar-track { background: var(--rpg-scrollbar-track, #14131D); border-left: 1px solid var(--color-rpg-border, #34304A); }
+  ::-webkit-scrollbar-thumb { background: var(--rpg-scrollbar-thumb, #554F70); border-radius: 1px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rpg-scrollbar-thumb-hover, #FFD32A); }
 }
 
 /* ── Animations ───────────────────────────────────────────────────────────── */

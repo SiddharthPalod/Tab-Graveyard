@@ -250,5 +250,62 @@ describe('Theme Engine & Registry Tests', () => {
     // Clean up test theme
     delete THEMES.office;
   });
+
+  it('renders all components and applies custom labels/icons for an arbitrary 3rd theme without any component code changes', () => {
+    const customCyberTheme = {
+      ...undertaleTheme,
+      id: 'cyberpunk',
+      name: 'Night City',
+      shortName: 'CYBER',
+      tagline: 'Wake up, Samurai.',
+      icon: '⚡',
+      labels: {
+        stateDead: 'Flatlined',
+        stateAlive: 'Netrunning',
+        collapseArchetype: 'TO ICE VAULT',
+      },
+      nav: {
+        graveyard: { label: 'SCRAP', tooltip: 'Flatlined neural links' },
+        catacombs: { label: 'ARCHIVE', tooltip: 'Deep freeze ICE vaults' },
+        living:    { label: 'SYNAPSE', tooltip: 'Active neural synapses' },
+      },
+    };
+
+    THEMES['cyberpunk'] = customCyberTheme;
+
+    const navHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'cyberpunk' },
+        React.createElement(BattleNav, {
+          activePage: 'graveyard',
+          onSelectPage: () => {},
+          buriedCount: 7,
+          tombstoneCount: 3,
+          livingCount: 12,
+        })
+      )
+    );
+    expect(navHtml).toContain('SCRAP');
+    expect(navHtml).toContain('ARCHIVE');
+    expect(navHtml).toContain('SYNAPSE');
+
+    const tabHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'cyberpunk' },
+        React.createElement(TabItem, {
+          tab: mockTab,
+          isHovered: false,
+          onHover: () => {},
+          actions: mockActions,
+        })
+      )
+    );
+    // Custom domain label rendered without modifying TabItem!
+    expect(tabHtml).toContain('Flatlined');
+
+    delete THEMES.cyberpunk;
+  });
 });
 

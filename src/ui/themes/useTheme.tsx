@@ -31,26 +31,65 @@ export const ThemeProvider: React.FC<{
   const [themeId, setThemeIdState] = useState<ThemeId>(initialThemeId || DEFAULT_THEME_ID);
   const [themesMap, setThemesMap]  = useState<Record<string, ThemePersonality>>({ ...THEMES });
 
-  // Apply theme data attribute to document body & root element
-  const applyThemeToDom = useCallback((id: ThemeId) => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', id);
+  // Pure dynamic DOM injection: sets CSS variables directly from theme.palette
+  const applyThemeToDom = useCallback((themeToApply: ThemePersonality) => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    root.setAttribute('data-theme', themeToApply.id);
+    if (document.body) {
+      document.body.setAttribute('data-theme', themeToApply.id);
+    }
+
+    if (themeToApply.palette) {
+      root.style.setProperty('--color-rpg-bg', themeToApply.palette.bg);
+      root.style.setProperty('--color-rpg-white', themeToApply.palette.white);
+      root.style.setProperty('--color-rpg-dark-gray', themeToApply.palette.darkGray);
+      root.style.setProperty('--color-rpg-surface', themeToApply.palette.surface);
+      root.style.setProperty('--color-rpg-surface-hover', themeToApply.palette.surfaceHover);
+      root.style.setProperty('--color-rpg-border', themeToApply.palette.border);
+      root.style.setProperty('--color-rpg-mid-gray', themeToApply.palette.midGray);
+      root.style.setProperty('--color-rpg-light-gray', themeToApply.palette.lightGray);
+      root.style.setProperty('--color-rpg-soul', themeToApply.palette.soul);
+      root.style.setProperty('--color-rpg-determination', themeToApply.palette.determination);
+      root.style.setProperty('--color-rpg-monster', themeToApply.palette.monster);
+      root.style.setProperty('--color-rpg-magic', themeToApply.palette.magic);
+      root.style.setProperty('--color-rpg-heart', themeToApply.palette.heart);
+      root.style.setProperty('--color-rpg-yellow', themeToApply.palette.yellow);
+
+      if (themeToApply.palette.shadow) {
+        root.style.setProperty('--rpg-shadow', themeToApply.palette.shadow);
+      }
+      if (themeToApply.palette.shadowHover) {
+        root.style.setProperty('--rpg-shadow-hover', themeToApply.palette.shadowHover);
+      }
+      if (themeToApply.palette.scrollbarTrack) {
+        root.style.setProperty('--rpg-scrollbar-track', themeToApply.palette.scrollbarTrack);
+      }
+      if (themeToApply.palette.scrollbarThumb) {
+        root.style.setProperty('--rpg-scrollbar-thumb', themeToApply.palette.scrollbarThumb);
+      }
+      if (themeToApply.palette.scrollbarThumbHover) {
+        root.style.setProperty('--rpg-scrollbar-thumb-hover', themeToApply.palette.scrollbarThumbHover);
+      }
+
       if (document.body) {
-        document.body.setAttribute('data-theme', id);
+        document.body.style.backgroundColor = themeToApply.palette.bg;
+        document.body.style.color = themeToApply.palette.white;
       }
     }
   }, []);
 
   // Initial load from chrome storage or localStorage
   useEffect(() => {
-    applyThemeToDom(themeId);
+    const current = themesMap[themeId] || getTheme(themeId);
+    applyThemeToDom(current);
 
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.get([STORAGE_THEME_KEY], (res) => {
         if (res && res[STORAGE_THEME_KEY] && res[STORAGE_THEME_KEY] in themesMap) {
           const loadedId = res[STORAGE_THEME_KEY] as ThemeId;
           setThemeIdState(loadedId);
-          applyThemeToDom(loadedId);
+          applyThemeToDom(themesMap[loadedId]);
         }
       });
     } else if (typeof localStorage !== 'undefined') {
@@ -58,18 +97,18 @@ export const ThemeProvider: React.FC<{
         const stored = localStorage.getItem(STORAGE_THEME_KEY) as ThemeId | null;
         if (stored && stored in themesMap) {
           setThemeIdState(stored);
-          applyThemeToDom(stored);
+          applyThemeToDom(themesMap[stored]);
         }
       } catch {
         // Ignore localStorage error in sandboxed environment
       }
     }
-  }, [applyThemeToDom, themesMap]);
+  }, [applyThemeToDom, themeId, themesMap]);
 
   const setThemeId = useCallback((id: ThemeId) => {
     if (!(id in themesMap)) return;
     setThemeIdState(id);
-    applyThemeToDom(id);
+    applyThemeToDom(themesMap[id]);
 
     if (typeof chrome !== 'undefined' && chrome.storage?.local) {
       chrome.storage.local.set({ [STORAGE_THEME_KEY]: id });
@@ -95,7 +134,7 @@ export const ThemeProvider: React.FC<{
     setThemeId(ids[nextIndex]);
   }, [themeId, themesMap, setThemeId]);
 
-  const currentTheme = useMemo(() => getTheme(themeId), [themeId]);
+  const currentTheme = useMemo(() => themesMap[themeId] || getTheme(themeId), [themeId, themesMap]);
   const availableThemes = useMemo(() => Object.values(themesMap), [themesMap]);
 
   const value = useMemo(

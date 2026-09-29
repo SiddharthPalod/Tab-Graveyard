@@ -36,7 +36,7 @@ export const ThemeSelector: React.FC = () => {
     };
   }, [isOpen]);
 
-  const shortName = theme.shortName || (theme.id === 'spongebob' ? 'BIKINI' : 'GRAVE');
+  const shortName = theme.shortName || theme.name.toUpperCase();
 
   return (
     <div className="relative inline-block text-left" ref={containerRef}>
