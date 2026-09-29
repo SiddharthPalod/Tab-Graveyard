@@ -32,6 +32,12 @@ import {
   LevelInfo,
   TelemetryStats,
 } from '../core/telemetry';
+import {
+  TopicCluster,
+  GraveyardLocalStats,
+  clusterTabsByTopics,
+  computeGraveyardStats,
+} from '../core/topicUtils';
 
 export interface TabActions {
   revive:                       (tab: TabRecord) => Promise<void>;
@@ -47,7 +53,11 @@ export interface TabActions {
   cremateOldest:                (keepCount?: number) => Promise<number>;
   sweepByArchetype:             (archetype: TabArchetype) => Promise<void>;
   collapseArchetypeToTombstone: (archetype: TabArchetype) => Promise<void>;
+  collapseTopicToTombstone:     (topic: TopicCluster) => Promise<void>;
   resurrectSession:             (session: TemporalSession) => Promise<void>;
+  purgeSession:                 (session: TemporalSession) => Promise<void>;
+  convertSessionToTombstone:    (session: TemporalSession) => Promise<void>;
+  purgeSelected:                (tabs: TabRecord[]) => Promise<void>;
   refresh:                      () => Promise<void>;
   // Store-level state mutations
   setFilter:                    (update: Partial<FilterOptions>) => void;
@@ -74,6 +84,10 @@ export interface TabStore {
   // Archetype & Domain aggregations
   archetypes:               Record<TabArchetype, TabViewModel[]>;
   topDomains:               DomainCount[];
+
+  // Phase 8: Graveyard Topics (Forgotten Interests) & Local Statistics
+  graveyardTopics:          TopicCluster[];
+  graveyardStats:           GraveyardLocalStats;
 
   // Filter & Search state (Single source of truth)
   filters:                  FilterOptions;
@@ -258,6 +272,16 @@ export function useTabs(): TabStore {
   const temporalSessions = useMemo(() => {
     return groupTabsIntoTemporalSessions(allBuriedTabs);
   }, [allBuriedTabs]);
+
+  // Phase 8: Extract topic clusters from buried tabs ("Forgotten Interests")
+  const graveyardTopics = useMemo(() => {
+    return clusterTabsByTopics(allBuriedTabs, 2);
+  }, [allBuriedTabs]);
+
+  // Aggregate local statistics
+  const graveyardStats = useMemo(() => {
+    return computeGraveyardStats(allBuriedTabs, graveyardTopics);
+  }, [allBuriedTabs, graveyardTopics]);
 
   // ── Selectors (Pre-computed & Filtered for UI) ─────────────────────────────
 
@@ -475,6 +499,32 @@ export function useTabs(): TabStore {
   };
 
   /**
+   * Permanently purges user-selected dead tabs from the Graveyard.
+   */
+  const purgeSelected = async (selectedTabs: TabRecord[]) => {
+    if (!selectedTabs || selectedTabs.length === 0) return;
+    const urls = selectedTabs.map((t) => t.cleanUrl);
+    await db.tabs.bulkDelete(urls);
+    await recordTelemetryEvent('purge', urls.length);
+    await loadData();
+  };
+
+  /**
+   * Converts a Temporal Session into a Permanent Tombstone monument.
+   */
+  const convertSessionToTombstone = async (session: TemporalSession) => {
+    const items: TombstoneTabItem[] = session.tabs.map((t) => ({
+      cleanUrl: t.cleanUrl,
+      url:      t.url,
+      title:    t.title || 'Untitled Tab',
+      domain:   t.domain || 'web',
+    }));
+    await db.createTombstone(session.title, items);
+    await recordTelemetryEvent('tombstone', 1);
+    await loadData();
+  };
+
+  /**
    * One-click sweep for an entire behavioral archetype.
    * Closes all tabs belonging to that archetype in Chrome and marks them dead.
    */
@@ -514,7 +564,16 @@ export function useTabs(): TabStore {
   };
 
   /**
-   * Reopens all tabs in a temporal session back into Chrome.
+   * Phase 8: One-click collapse an entire detected Topic Cluster into a permanent Tombstone.
+   */
+  const collapseTopicToTombstone = async (topic: TopicCluster) => {
+    if (!topic || topic.tabs.length === 0) return;
+    const title = `${topic.icon} ${topic.name} (${topic.count} tabs)`;
+    await bundleGravesToTombstone(topic.tabs, title);
+  };
+
+  /**
+   * Reopens all tabs in a temporal session back into Chrome and revives them.
    */
   const resurrectSession = async (session: TemporalSession) => {
     for (const item of session.tabs) {
@@ -530,6 +589,21 @@ export function useTabs(): TabStore {
       } catch (err) {
         console.error('[useTabs] Failed to resurrect session URL:', item.url, err);
       }
+    }
+    if (session.tabs.length > 0) {
+      await recordTelemetryEvent('revive', session.tabs.length);
+    }
+    await loadData();
+  };
+
+  /**
+   * Permanently purges all tabs in a Temporal Session from IndexedDB.
+   */
+  const purgeSession = async (session: TemporalSession) => {
+    const urls = session.tabs.map((t) => t.cleanUrl);
+    await db.tabs.bulkDelete(urls);
+    if (urls.length > 0) {
+      await recordTelemetryEvent('purge', urls.length);
     }
     await loadData();
   };
@@ -548,7 +622,11 @@ export function useTabs(): TabStore {
     cremateOldest,
     sweepByArchetype,
     collapseArchetypeToTombstone,
+    collapseTopicToTombstone,
     resurrectSession,
+    purgeSession,
+    convertSessionToTombstone,
+    purgeSelected,
     refresh: loadData,
     setFilter,
     resetFilters,
@@ -569,6 +647,8 @@ export function useTabs(): TabStore {
     filteredTemporalSessions,
     archetypes,
     topDomains,
+    graveyardTopics,
+    graveyardStats,
     filters,
     activeFilterCount,
     hasActiveFilters,

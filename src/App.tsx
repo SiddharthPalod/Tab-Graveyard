@@ -28,6 +28,8 @@ export const App: React.FC = () => {
     temporalSessions,
     archetypes,
     topDomains,
+    graveyardTopics,
+    graveyardStats,
     filters,
     activeFilterCount,
     hasActiveFilters,
@@ -80,6 +82,8 @@ export const App: React.FC = () => {
             keepCount={keepCount}
             cremateCount={cremateCount}
             totalDead={allBuriedTabs.length}
+            topics={graveyardTopics}
+            stats={graveyardStats}
             actions={actions}
           />
         )}

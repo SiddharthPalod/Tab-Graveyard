@@ -11,14 +11,14 @@ describe('telemetry & level progression', () => {
     }, 0);
 
     expect(info.level).toBe(1);
-    expect(info.title).toBe('Novice Gravedigger');
+    expect(info.title).toBe('Gravedigger');
     expect(info.currentXp).toBe(0);
-    expect(info.nextLevelXp).toBe(50);
+    expect(info.nextLevelXp).toBe(25);
     expect(info.progress).toBe(0);
   });
 
   it('levels up as actions and buried tabs accumulate', () => {
-    // 3 revives (60 XP) + 1 purge (12 XP) = 72 XP -> Level 2
+    // 3 revives (60 XP) + 1 purge (12 XP) = 72 XP -> Level 3 (Caretaker)
     const info = computeLevelInfo({
       tabsPurged: 1,
       tabsRevived: 3,
@@ -26,8 +26,8 @@ describe('telemetry & level progression', () => {
       tombstonesCreated: 0,
     }, 0);
 
-    expect(info.level).toBe(2);
-    expect(info.title).toBe('Cryptkeeper');
+    expect(info.level).toBe(3);
+    expect(info.title).toBe('Caretaker');
     expect(info.currentXp).toBe(72);
     expect(info.progress).toBeGreaterThan(0);
   });
@@ -38,10 +38,10 @@ describe('telemetry & level progression', () => {
       tabsRevived: 10,        // 200 XP
       tabsSwept: 15,          // 120 XP
       tombstonesCreated: 5,   // 125 XP
-    }, 10);                   // 30 XP -> Total: 715 XP
+    }, 10);                   // 30 XP -> Total: 715 XP (Crypt Lord: 600+)
 
-    expect(info.level).toBe(5);
-    expect(info.title).toBe('Death Sovereign');
+    expect(info.level).toBe(8);
+    expect(info.title).toBe('Crypt Lord');
     expect(info.currentXp).toBe(715);
   });
 });

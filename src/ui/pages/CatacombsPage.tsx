@@ -15,7 +15,12 @@ interface CatacombsPageProps {
   loading:          boolean;
   actions:          Pick<
     TabActions,
-    'resurrectTombstone' | 'shatterTombstone' | 'reviveTombstoneUrl' | 'resurrectSession'
+    | 'resurrectTombstone'
+    | 'shatterTombstone'
+    | 'reviveTombstoneUrl'
+    | 'resurrectSession'
+    | 'purgeSession'
+    | 'revive'
   >;
 }
 
@@ -95,7 +100,7 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                       </h3>
                     </div>
                     <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
-                      Collapsed {formatRelativeTime(tomb.createdAt)} • {tabCount} {tabCount === 1 ? 'URL' : 'URLs'} bundled
+                      Collapsed {formatRelativeTime(tomb.createdAt)} • {tabCount} {tabCount === 1 ? 'tab' : 'tabs'} bundled
                     </p>
                   </div>
 
@@ -180,28 +185,54 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                       Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div
+                    className="flex items-center gap-1.5 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => actions.resurrectSession(sess)}
-                      className="font-pixel text-[8px] bg-sky-700 hover:bg-sky-600 text-white px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
+                      className={cls.btn.revive}
+                      title="Reopen all tabs from this session in Chrome"
                     >
-                      <IconRevive className="text-xs" />
-                      <span>RESTORE</span>
+                      <IconRevive className="text-xs shrink-0" />
+                      <span>RESURRECT</span>
                     </button>
-                    <div
-                      className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border"
+                    <button
+                      onClick={() => actions.purgeSession(sess)}
+                      className={cls.btn.danger}
+                      title="Permanently purge this session and its tabs"
                     >
-                      {isExp ? '▲' : '▼'}
-                    </div>
+                      <IconPurge className="text-xs shrink-0" />
+                      <span>PURGE</span>
+                    </button>
                   </div>
                 </div>
 
                 {isExp && (
                   <div className="mt-2 pt-1.5 border-t border-rpg-border/60 space-y-1 pl-1">
                     {sess.tabs.map((tab) => (
-                      <p key={tab.cleanUrl} className="font-sans text-[11px] text-slate-300 truncate">
-                        • {tab.title || tab.domain} <span className="text-rpg-light-gray/70">({tab.domain})</span>
-                      </p>
+                      <div
+                        key={tab.cleanUrl}
+                        className="flex items-center justify-between gap-2 p-1 hover:bg-rpg-surface rounded-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-sans text-xs text-slate-200 truncate" title={tab.title}>
+                            • {tab.title || tab.domain}
+                          </p>
+                          <p className="font-sans text-[10px] text-rpg-light-gray/70 truncate" title={tab.url}>
+                            {tab.url}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => actions.revive(tab)}
+                          className="font-pixel text-[7px] bg-emerald-600 hover:bg-emerald-500 text-white px-1.5 py-0.5 uppercase inline-flex items-center gap-0.5 cursor-pointer shrink-0"
+                          title="Revive this tab into Chrome"
+                        >
+                          <IconRevive className="text-[10px]" />
+                          <span>REVIVE</span>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}

@@ -28,7 +28,7 @@ export function generateTombstoneTitle(tabs: TombstoneTabItem[]): string {
   );
 
   const total = tabs.length;
-  const unit = total === 1 ? 'URL' : 'URLs';
+  const unit = total === 1 ? 'tab' : 'tabs';
 
   if (sortedDomains.length === 1) {
     return `${sortedDomains[0]} Rabbit Hole (${total} ${unit})`;

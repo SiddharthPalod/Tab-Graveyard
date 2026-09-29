@@ -57,4 +57,22 @@ describe('partitionForCremation', () => {
     expect(preserved[0].lastActivatedAt).toBe(69000);
     expect(cremated[0].lastActivatedAt).toBe(49000);
   });
+
+  it('never cremates tabs that belong to protectedUrls (e.g. Temporal Sessions)', () => {
+    const tabs = [
+      { id: 1, cleanUrl: 'https://session.com/a', lastActivatedAt: 100 }, // oldest, but protected
+      { id: 2, cleanUrl: 'https://loose.com/b',   lastActivatedAt: 500 }, // newest
+      { id: 3, cleanUrl: 'https://loose.com/c',   lastActivatedAt: 200 }, // older loose tab
+    ];
+
+    // Keep newest 1 loose tab; protectedUrls = ['https://session.com/a']
+    const { preserved, cremated } = partitionForCremation(tabs, 1, ['https://session.com/a']);
+
+    // id 2 is preserved, id 3 is cremated
+    expect(preserved.map((t) => t.id)).toEqual([2]);
+    expect(cremated.map((t) => t.id)).toEqual([3]);
+
+    // Protected tab id 1 is NOT cremated
+    expect(cremated.find((t) => t.cleanUrl === 'https://session.com/a')).toBeUndefined();
+  });
 });

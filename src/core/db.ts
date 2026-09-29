@@ -193,18 +193,22 @@ export class GraveyardDB extends Dexie {
   /**
    * Cremates the oldest dead tabs beyond `keepCount`.
    * Preserves the newest `keepCount` dead tabs and permanently deletes the rest.
+   * Protects any URLs passed in `protectedUrls` (e.g. tabs belonging to Temporal Sessions).
    * Returns the count of deleted tabs.
    */
-  async cremateOldestDead(keepCount: number = 20): Promise<number> {
+  async cremateOldestDead(keepCount: number = 20, protectedUrls: string[] = []): Promise<number> {
     const safeKeep = Math.max(0, keepCount);
+    const protectedSet = new Set(protectedUrls);
     return await this.transaction('rw', this.tabs, async () => {
       const deadTabs = await this.tabs.where('status').equals('dead').toArray();
+      // Exclude tabs belonging to temporal sessions or protected
+      const eligible = deadTabs.filter((t) => !protectedSet.has(t.cleanUrl));
       // Sort newest lastActivatedAt first
-      deadTabs.sort((a, b) => b.lastActivatedAt - a.lastActivatedAt);
+      eligible.sort((a, b) => b.lastActivatedAt - a.lastActivatedAt);
 
-      if (deadTabs.length <= safeKeep) return 0;
+      if (eligible.length <= safeKeep) return 0;
 
-      const toDelete = deadTabs.slice(safeKeep);
+      const toDelete = eligible.slice(safeKeep);
       const urlsToDelete = toDelete.map((t) => t.cleanUrl);
       await this.tabs.bulkDelete(urlsToDelete);
       return urlsToDelete.length;

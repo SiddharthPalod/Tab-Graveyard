@@ -16,6 +16,7 @@ import {
   GiMimicChest,
   GiMagicPotion,
   GiShatteredHeart,
+  GiBrain,
 } from 'react-icons/gi';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -39,3 +40,4 @@ export const IconSkullhead = (props: IconProps) => <GiSkullCrack {...props} />;
 export const IconCoffin = (props: IconProps) => <GiCoffin {...props} />;
 export const IconMimic = (props: IconProps) => <GiMimicChest {...props} />;
 export const IconMagic = (props: IconProps) => <GiMagicPotion {...props} />;
+export const IconBrain = (props: IconProps) => <GiBrain {...props} />;

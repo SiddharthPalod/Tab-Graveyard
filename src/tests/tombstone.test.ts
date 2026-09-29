@@ -12,14 +12,14 @@ describe('generateTombstoneTitle', () => {
       { cleanUrl: 'https://github.com/a', url: 'https://github.com/a', title: 'A', domain: 'github.com' },
       { cleanUrl: 'https://github.com/b', url: 'https://github.com/b', title: 'B', domain: 'github.com' },
     ];
-    expect(generateTombstoneTitle(tabs)).toBe('github.com Rabbit Hole (2 URLs)');
+    expect(generateTombstoneTitle(tabs)).toBe('github.com Rabbit Hole (2 tabs)');
   });
 
   it('formats 1 URL with singular unit', () => {
     const tabs: TombstoneTabItem[] = [
       { cleanUrl: 'https://react.dev', url: 'https://react.dev', title: 'React', domain: 'react.dev' },
     ];
-    expect(generateTombstoneTitle(tabs)).toBe('react.dev Rabbit Hole (1 URL)');
+    expect(generateTombstoneTitle(tabs)).toBe('react.dev Rabbit Hole (1 tab)');
   });
 
   it('formats two domains nicely', () => {
@@ -27,7 +27,7 @@ describe('generateTombstoneTitle', () => {
       { cleanUrl: 'https://github.com/a', url: 'https://github.com/a', title: 'A', domain: 'github.com' },
       { cleanUrl: 'https://youtube.com/watch', url: 'https://youtube.com/watch', title: 'YT', domain: 'youtube.com' },
     ];
-    expect(generateTombstoneTitle(tabs)).toBe('github.com & youtube.com (2 URLs)');
+    expect(generateTombstoneTitle(tabs)).toBe('github.com & youtube.com (2 tabs)');
   });
 
   it('formats dominant domain with others when 3+ domains and one dominates', () => {
@@ -38,7 +38,7 @@ describe('generateTombstoneTitle', () => {
       { cleanUrl: 'https://youtube.com/v', url: 'https://youtube.com/v', title: 'Y', domain: 'youtube.com' },
     ];
     // github has 2 out of 4 (50%)
-    expect(generateTombstoneTitle(tabs)).toBe('github.com & Others (4 URLs)');
+    expect(generateTombstoneTitle(tabs)).toBe('github.com & Others (4 tabs)');
   });
 
   it('formats generic Underground Research when domains are completely scattered', () => {
@@ -47,6 +47,6 @@ describe('generateTombstoneTitle', () => {
       { cleanUrl: 'https://b.com', url: 'https://b.com', title: 'B', domain: 'b.com' },
       { cleanUrl: 'https://c.com', url: 'https://c.com', title: 'C', domain: 'c.com' },
     ];
-    expect(generateTombstoneTitle(tabs)).toBe('Underground Research (3 URLs)');
+    expect(generateTombstoneTitle(tabs)).toBe('Underground Research (3 tabs)');
   });
 });

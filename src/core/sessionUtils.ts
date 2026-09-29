@@ -47,7 +47,7 @@ export function groupTabsIntoTemporalSessions(
       const autoTitle  = generateTombstoneTitle(tabs);
       result.push({
         id:        sId,
-        title:     `Session: ${autoTitle}`,
+        title:     autoTitle,
         timestamp: latestTime,
         tabs,
       });
@@ -74,7 +74,7 @@ export function groupTabsIntoTemporalSessions(
           const autoTitle  = generateTombstoneTitle(currentCluster);
           result.push({
             id:        `session_${latestTime}`,
-            title:     `Temporal Session (${currentCluster.length} URLs): ${autoTitle}`,
+            title:     autoTitle,
             timestamp: latestTime,
             tabs:      [...currentCluster],
           });
@@ -90,7 +90,7 @@ export function groupTabsIntoTemporalSessions(
     const autoTitle  = generateTombstoneTitle(currentCluster);
     result.push({
       id:        `session_${latestTime}`,
-      title:     `Temporal Session (${currentCluster.length} URLs): ${autoTitle}`,
+      title:     autoTitle,
       timestamp: latestTime,
       tabs:      [...currentCluster],
     });
