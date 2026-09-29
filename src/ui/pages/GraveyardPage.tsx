@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
 import { ForgottenInterests } from '../components/ForgottenInterests';
 import type { TabViewModel } from '../../core/behavior';
@@ -11,7 +10,11 @@ import {
   IconCremate,
   IconGrave,
   IconPurge,
+  IconAnchor,
+  IconFishBucket,
+  IconBurger,
 } from '../components/GameIcons';
+import { useTheme } from '../themes/useTheme';
 
 interface GraveyardPageProps {
   tabs: TabViewModel[];
@@ -51,6 +54,9 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
   stats,
   actions,
 }) => {
+  const { theme } = useTheme();
+  const isSponge = theme.id === 'spongebob';
+
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -58,7 +64,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
   if (loading) {
     return (
       <div className="p-3 bg-rpg-dark-gray/90 border border-rpg-border text-center text-rpg-yellow font-dialogue text-base rounded-sm">
-        <TypewriterText text={QUOTES.checkingDust} />
+        <TypewriterText text={theme.quotes.checkingDust} />
       </div>
     );
   }
@@ -67,16 +73,20 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
     return (
       <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
-          <IconGrave className="text-4xl" />
+          {isSponge ? (
+            <IconAnchor className="text-4xl text-[#00A3E0]" />
+          ) : (
+            <IconGrave className="text-4xl text-rpg-mid-gray" />
+          )}
         </div>
 
         <p className="text-slate-200 font-sans text-xs">
-          <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyGraveyard} />
+          <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyGraveyard} />
         </p>
 
         {!searchQuery && (
           <p className="text-[11px] text-rpg-light-gray font-sans">
-            {QUOTES.hintBuried}
+            {theme.quotes.hintBuried}
           </p>
         )}
       </div>
@@ -151,7 +161,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
 
           <div className="space-y-2">
             <p className="font-pixel text-[7.5px] text-rpg-yellow">
-              * NAME THIS TOMBSTONE ({selectedTabs.length} GRAVES):
+              {theme.catacombs.nameTombstonePrompt(selectedTabs.length)}
             </p>
 
             <div className="flex items-center gap-2">
@@ -159,17 +169,17 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="auto-name (leave blank) or type title..."
+                placeholder={theme.catacombs.placeholderTombstone}
                 className="flex-1 min-w-0 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1.5 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
 
               <button
                 onClick={handleConfirmBundle}
-                className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
+                className={theme.cls.btn.accent}
               >
-                <IconErect className="text-xs shrink-0" />
-                <span>ERECT</span>
+                {isSponge ? <IconBurger className="text-xs shrink-0" /> : <IconErect className="text-xs shrink-0" />}
+                <span>{theme.actions.erect}</span>
               </button>
 
               <button
@@ -195,27 +205,27 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                 onClick={handleSelectAll}
                 className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-rpg-yellow cursor-pointer whitespace-nowrap"
               >
-                {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
+                {hasSelection ? theme.actions.deselect(selectedTabs.length) : theme.actions.selectAll}
               </button>
 
               {hasSelection && (
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setNamingOpen(true)}
-                    className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2.5 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
-                    title="Bundle selected dead tabs into a permanent Tombstone in Catacombs"
+                    className={theme.cls.btn.accent}
+                    title="Bundle selected dead tabs into a permanent vault/tombstone"
                   >
-                    <IconErect className="text-xs shrink-0" />
-                    <span>ERECT ({selectedTabs.length})</span>
+                    {isSponge ? <IconBurger className="text-xs shrink-0" /> : <IconErect className="text-xs shrink-0" />}
+                    <span>{theme.actions.erectAction(selectedTabs.length)}</span>
                   </button>
 
                   <button
                     onClick={handlePurgeSelected}
                     className="font-pixel text-[8px] bg-rose-900/90 hover:bg-rose-700 text-rose-100 border border-rose-500/50 px-2.5 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0 shadow-pixel"
-                    title="Permanently incinerate selected dead tabs"
+                    title={theme.actions.purgeTooltip}
                   >
-                    <IconPurge className="text-xs shrink-0" />
-                    <span>PURGE ({selectedTabs.length})</span>
+                    {isSponge ? <IconFishBucket className="text-xs shrink-0" /> : <IconPurge className="text-xs shrink-0" />}
+                    <span>{theme.actions.purge} ({selectedTabs.length})</span>
                   </button>
                 </div>
               )}
@@ -227,7 +237,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
 
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="font-pixel text-[7.5px] text-rpg-mid-gray whitespace-nowrap">
-                KEEP:
+                {theme.actions.keepLabel}
               </span>
 
               <div className="flex items-center gap-1">
@@ -238,7 +248,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                   value={keepCount}
                   onChange={(e) => actions.setKeepCount(parseInt(e.target.value, 10))}
                   className="w-12 h-8 bg-rpg-bg border border-rpg-border font-pixel text-[8px] leading-[1.5] text-center text-rpg-yellow outline-none shrink-0"
-                  title="Number of newest dead tabs to keep"
+                  title={theme.actions.keepTooltip}
                 />
 
                 <button
@@ -257,8 +267,8 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                 className={`font-pixel text-[8px] px-3 py-1.5 uppercase inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 transition-all ${cremateCount === 0 ? 'bg-rose-950/40 text-rose-300/40 border border-rose-950/40 cursor-not-allowed' : 'bg-rose-900/90 hover:bg-rose-700 text-rose-100 border border-rose-500/50 shadow-pixel cursor-pointer'}`}
                 title={cremateCount === 0 ? `All ${totalDead} dead tabs are retained because KEEP is set to ${keepCount}. Click ALL or lower KEEP to 0 to cremate them.` : `Keep the newest ${keepCount} tabs, delete the oldest ${cremateCount} tabs (${cremateCount}/${totalDead})`}
               >
-                <IconCremate className="text-xs shrink-0" />
-                <span>CREMATE ({cremateCount})</span>
+                {isSponge ? <IconFishBucket className="text-xs shrink-0" /> : <IconCremate className="text-xs shrink-0" />}
+                <span>{theme.actions.cremate(cremateCount)}</span>
               </button>
             </div>
           </div>

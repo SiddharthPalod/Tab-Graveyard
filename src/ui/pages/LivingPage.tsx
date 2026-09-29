@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { QUOTES } from '../tokens';
 import { TabItem } from '../components/TabItem';
 import { BehavioralMirror } from '../components/BehavioralMirror';
 import type { TabArchetype, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
-import { DialogueBox, PixelPanel, PixelButton, TypewriterText } from '../components/RPGPrimitives';
-import { IconGhost, IconErect } from '../components/GameIcons';
+import { TypewriterText } from '../components/RPGPrimitives';
+import { IconGhost, IconErect, IconJellyfish, IconBurger } from '../components/GameIcons';
+import { useTheme } from '../themes/useTheme';
 
 interface LivingPageProps {
   tabs:        TabViewModel[];
@@ -34,6 +34,9 @@ export const LivingPage: React.FC<LivingPageProps> = ({
   onHover,
   actions,
 }) => {
+  const { theme } = useTheme();
+  const isSponge = theme.id === 'spongebob';
+
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen]     = useState(false);
   const [customTitle, setCustomTitle]   = useState('');
@@ -41,7 +44,7 @@ export const LivingPage: React.FC<LivingPageProps> = ({
   if (loading) {
     return (
       <div className="p-3 bg-rpg-dark-gray/90 border border-rpg-border text-center text-rpg-yellow font-dialogue text-base rounded-sm">
-        <TypewriterText text={QUOTES.checkingDust} />
+        <TypewriterText text={theme.quotes.checkingDust} />
       </div>
     );
   }
@@ -50,10 +53,14 @@ export const LivingPage: React.FC<LivingPageProps> = ({
     return (
       <div className="p-6 bg-rpg-dark-gray/80 border border-rpg-border text-center space-y-2 rounded-sm shadow-pixel">
         <div className="flex justify-center text-rpg-mid-gray">
-          <IconGhost className="text-4xl" />
+          {isSponge ? (
+            <IconJellyfish className="text-4xl text-[#FFB2B2]" />
+          ) : (
+            <IconGhost className="text-4xl" />
+          )}
         </div>
         <p className="text-slate-200 font-sans text-xs">
-          <TypewriterText text={searchQuery ? QUOTES.noResults : QUOTES.emptyLiving} />
+          <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyLiving} />
         </p>
       </div>
     );
@@ -97,23 +104,23 @@ export const LivingPage: React.FC<LivingPageProps> = ({
         {namingOpen ? (
           <div className="space-y-1.5">
             <p className="font-pixel text-[7.5px] text-rpg-yellow">
-              * NAME THIS TOMBSTONE ({targetTabs.length} URLs):
+              {theme.catacombs.nameTombstonePrompt(targetTabs.length)}
             </p>
             <div className="flex items-center gap-1.5">
               <input
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="auto-name (leave blank) or type title..."
+                placeholder={theme.catacombs.placeholderTombstone}
                 className="flex-1 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
               <button 
                 onClick={handleConfirmCollapse} 
-                className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer"
+                className={theme.cls.btn.accent}
               >
-                <IconErect className="text-xs" />
-                <span>BURY</span>
+                {isSponge ? <IconBurger className="text-xs" /> : <IconErect className="text-xs" />}
+                <span>{theme.actions.bury}</span>
               </button>
               <button
                 onClick={() => setNamingOpen(false)}
@@ -129,16 +136,16 @@ export const LivingPage: React.FC<LivingPageProps> = ({
               onClick={handleSelectAll}
               className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-rpg-yellow cursor-pointer"
             >
-              {hasSelection ? `[DESELECT (${selectedTabs.length})]` : '[SELECT ALL]'}
+              {hasSelection ? theme.actions.deselect(selectedTabs.length) : theme.actions.selectAll}
             </button>
 
             <button
               onClick={() => setNamingOpen(true)}
-              className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
+              className={theme.cls.btn.accent}
               title="Collapse open tabs in Chrome to free RAM"
             >
-              <IconErect className="text-xs" />
-              <span>{hasSelection ? `COLLAPSE (${selectedTabs.length})` : `COLLAPSE ALL (${tabs.length})`}</span>
+              {isSponge ? <IconBurger className="text-xs" /> : <IconErect className="text-xs" />}
+              <span>{hasSelection ? theme.actions.collapse(selectedTabs.length) : theme.actions.collapseAll(tabs.length)}</span>
             </button>
           </div>
         )}

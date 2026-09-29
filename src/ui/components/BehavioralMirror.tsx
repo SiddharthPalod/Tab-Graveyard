@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { cls } from '../tokens';
 import { TabArchetype, TabViewModel, ARCHETYPE_META } from '../../core/behavior';
 import type { TabRecord } from '../../core/db';
 import type { TabActions } from '../../store/useTabs';
-import { IconMirror, IconSweep, IconTomb } from './GameIcons';
+import { IconMirror, IconSweep, IconTomb, IconBurger, IconFishingNet } from './GameIcons';
+import { useTheme } from '../themes/useTheme';
 
 interface BehavioralMirrorProps {
   archetypes: Record<TabArchetype, (TabRecord | TabViewModel)[]>;
@@ -14,6 +14,9 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
   archetypes,
   actions,
 }) => {
+  const { theme } = useTheme();
+  const isSponge = theme.id === 'spongebob';
+
   const [isOpen, setIsOpen]                 = useState(false);
   const [selectedArch, setSelectedArch]     = useState<TabArchetype | null>(null);
 
@@ -24,7 +27,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
 
   if (activeArchetypes.length === 0) return null;
 
-  const currentMeta  = selectedArch ? ARCHETYPE_META[selectedArch] : null;
+  const currentMeta  = selectedArch ? (theme.archetypes?.[selectedArch] || ARCHETYPE_META[selectedArch]) : null;
   const currentCount = selectedArch ? archetypes[selectedArch].length : 0;
 
   return (
@@ -32,14 +35,14 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
       {/* Header / Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between font-pixel text-[7.5px] text-rpg-monster py-0.5 hover:text-white cursor-pointer"
+        className="w-full flex items-center justify-between font-pixel text-[7.5px] text-rpg-monster py-0.5 hover:text-rpg-white cursor-pointer"
       >
         <span className="flex items-center gap-1.5">
           <IconMirror className="text-xs" />
-          <span>BEHAVIORAL MIRROR</span>
-          <span className="text-rpg-light-gray/70 font-sans text-[10.5px]">({activeArchetypes.length} profiles active)</span>
+          <span>{theme.mirrorTitle || 'BEHAVIORAL MIRROR'}</span>
+          <span className="text-rpg-light-gray/70 font-sans text-[10.5px]">({activeArchetypes.length} active)</span>
         </span>
-        <span className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border">{isOpen ? '▲' : '▼'}</span>
+        <span className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-rpg-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border">{isOpen ? '▲' : '▼'}</span>
       </button>
 
       {/* Expanded Dashboard */}
@@ -48,7 +51,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
           {/* Archetype Chips */}
           <div className="flex flex-wrap gap-1">
             {activeArchetypes.map((arch) => {
-              const meta  = ARCHETYPE_META[arch];
+              const meta  = theme.archetypes?.[arch] || ARCHETYPE_META[arch];
               const count = archetypes[arch].length;
               const isSel = selectedArch === arch;
 
@@ -59,7 +62,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
                   className={`font-pixel text-[7px] px-1.5 py-0.5 border transition-colors flex items-center gap-1 cursor-pointer rounded-none ${
                     isSel
                       ? 'border-rpg-monster text-rpg-monster bg-rpg-surface font-bold shadow-pixel'
-                      : 'border-rpg-border text-rpg-light-gray hover:border-rpg-light-gray hover:text-white'
+                      : 'border-rpg-border text-rpg-light-gray hover:border-rpg-light-gray hover:text-rpg-white'
                   }`}
                 >
                   <span>{meta.icon}</span>
@@ -82,7 +85,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
                 </span>
               </div>
 
-              <p className="font-dialogue text-sm text-slate-200 italic leading-tight">
+              <p className="font-dialogue text-sm text-rpg-white italic leading-tight">
                 {currentMeta.quote}
               </p>
 
@@ -90,19 +93,19 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
               <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-rpg-border/60">
                 <button
                   onClick={() => actions.sweepByArchetype(selectedArch)}
-                  title="Close all tabs of this archetype in Chrome and send to Graveyard"
-                  className={cls.btn.sweep}
+                  title="Close all tabs of this archetype in Chrome and store them"
+                  className={theme.cls.btn.sweep}
                 >
-                  <IconSweep className="text-xs" />
-                  <span>SWEEP ({currentCount})</span>
+                  {isSponge ? <IconFishingNet className="text-xs" /> : <IconSweep className="text-xs" />}
+                  <span>{theme.actions.sweep} ({currentCount})</span>
                 </button>
                 <button
                   onClick={() => actions.collapseArchetypeToTombstone(selectedArch)}
-                  className="font-pixel text-[8px] bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-2 py-1 inline-flex items-center gap-1 cursor-pointer shadow-pixel"
-                  title="Collapse all tabs of this archetype into a Tombstone"
+                  className={theme.cls.btn.accent}
+                  title="Collapse all tabs of this profile into a vault or tombstone"
                 >
-                  <IconTomb className="text-xs" />
-                  <span>TO TOMBSTONE</span>
+                  {isSponge ? <IconBurger className="text-xs" /> : <IconTomb className="text-xs" />}
+                  <span>{isSponge ? 'TO VAULT' : 'TO TOMBSTONE'}</span>
                 </button>
               </div>
             </div>

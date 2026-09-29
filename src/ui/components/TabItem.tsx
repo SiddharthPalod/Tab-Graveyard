@@ -1,9 +1,19 @@
 import React from 'react';
-import { cls, STATUS_LABELS } from '../tokens';
 import { formatRelativeTime, formatActiveDuration } from '../../core/lifecycle';
 import { ARCHETYPE_META, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
-import { IconHeart, IconRevive, IconPurge, IconSweep, IconGhost } from './GameIcons';
+import {
+  IconHeart,
+  IconRevive,
+  IconPurge,
+  IconSweep,
+  IconGhost,
+  IconBurger,
+  IconFishBucket,
+  IconFishingNet,
+  IconJellyfish,
+} from './GameIcons';
+import { useTheme } from '../themes/useTheme';
 
 interface TabItemProps {
   tab:             TabViewModel;
@@ -22,9 +32,12 @@ export const TabItem: React.FC<TabItemProps> = ({
   isSelected,
   onToggleSelect,
 }) => {
+  const { theme } = useTheme();
+  const isSponge = theme.id === 'spongebob';
+
   const isDead = tab.status === 'dead';
-  const badgeCls = `${cls.badgeBase} ${cls.badge[tab.status]}`;
-  const archMeta = ARCHETYPE_META[tab.archetype];
+  const badgeCls = `${theme.cls.badgeBase} ${theme.cls.badge[tab.status]}`;
+  const archMeta = theme.archetypes?.[tab.archetype] || ARCHETYPE_META[tab.archetype];
   const metamorphosis = tab.metamorphosis;
 
   return (
@@ -39,7 +52,7 @@ export const TabItem: React.FC<TabItemProps> = ({
           ? 'bg-rpg-surface border-rpg-yellow shadow-pixel'
           : isHovered
           ? 'bg-rpg-surface/90 border-rpg-mid-gray/80 shadow-pixel'
-          : 'bg-rpg-dark-gray/80 border-rpg-border/90'
+          : 'bg-rpg-dark-gray/95 border-rpg-border/90'
         }
       `}
     >
@@ -62,9 +75,17 @@ export const TabItem: React.FC<TabItemProps> = ({
           ) : (
             <span className="flex items-center justify-center w-4 mt-0.5 shrink-0">
               {isHovered && isDead ? (
-                <IconGhost className="text-xs text-rpg-monster animate-ghost" />
+                isSponge ? (
+                  <IconAnchor className="text-xs text-[#0284C7] animate-bounce" />
+                ) : (
+                  <IconGhost className="text-xs text-rpg-monster animate-ghost" />
+                )
               ) : isHovered ? (
-                <IconHeart className="text-[10px] text-rpg-soul animate-pulse" />
+                isSponge ? (
+                  <IconJellyfish className="text-[10px] text-[#E11D48] animate-pulse" />
+                ) : (
+                  <IconHeart className="text-[10px] text-rpg-soul animate-pulse" />
+                )
               ) : (
                 <span className="font-pixel text-[7.5px] text-rpg-mid-gray">
                   *
@@ -78,17 +99,15 @@ export const TabItem: React.FC<TabItemProps> = ({
               className={`font-sans text-[12.5px] font-medium leading-snug truncate ${
                 isSelected
                   ? 'text-rpg-yellow font-semibold'
-                  : isHovered
-                  ? 'text-white'
-                  : 'text-slate-200'
+                  : 'text-rpg-white'
               }`}
               title={tab.title}
             >
               {tab.title || 'Untitled Encounter'}
             </h2>
 
-            <p className="font-sans text-[10.5px] text-rpg-light-gray/80 truncate">
-              <span className="text-slate-300 font-normal">
+            <p className="font-sans text-[10.5px] text-rpg-light-gray truncate">
+              <span className="text-rpg-white/90 font-normal">
                 {tab.domain || 'local'}
               </span>
 
@@ -105,7 +124,7 @@ export const TabItem: React.FC<TabItemProps> = ({
         <div className="flex items-center gap-1 shrink-0 mt-0.5">
           {metamorphosis && (
             <span
-              className={`${cls.badgeBase} ${metamorphosis.badgeCls}`}
+              className={`${theme.cls.badgeBase} ${metamorphosis.badgeCls}`}
               title={metamorphosis.flavor}
             >
               {metamorphosis.icon} {metamorphosis.title}
@@ -114,7 +133,7 @@ export const TabItem: React.FC<TabItemProps> = ({
 
           {archMeta && (
             <span
-              className={`${cls.badgeBase} ${archMeta.badgeCls}`}
+              className={`${theme.cls.badgeBase} ${archMeta.badgeCls}`}
               title={`${archMeta.name}: ${archMeta.description}`}
             >
               {archMeta.icon} {archMeta.name}
@@ -122,7 +141,7 @@ export const TabItem: React.FC<TabItemProps> = ({
           )}
 
           <span className={badgeCls}>
-            {STATUS_LABELS[tab.status]}
+            {theme.statusLabels[tab.status]}
           </span>
         </div>
       </div>
@@ -130,7 +149,7 @@ export const TabItem: React.FC<TabItemProps> = ({
       {/* Stats & Solid Action Buttons Row */}
       <div className="flex items-center justify-between pt-1.5 border-t border-rpg-border/60">
         <span className="font-sans text-[10.5px] text-rpg-light-gray/70 truncate max-w-[220px]">
-          {isDead ? 'Buried' : 'Resting'}{' '}
+          {isDead ? (isSponge ? 'Sunken' : 'Buried') : (isSponge ? 'Swimming' : 'Resting')}{' '}
           {formatRelativeTime(tab.lastActivatedAt)}{' '}
           (Visits: {tab.activationCount})
         </span>
@@ -144,30 +163,30 @@ export const TabItem: React.FC<TabItemProps> = ({
             <>
               <button
                 onClick={() => actions.revive(tab)}
-                className={cls.btn.revive}
-                title="Revive tab back into active Chrome window"
+                className={theme.cls.btn.revive}
+                title={theme.actions.reviveTooltip}
               >
-                <IconRevive className="text-xs" />
-                <span>REVIVE</span>
+                {isSponge ? <IconBurger className="text-xs" /> : <IconRevive className="text-xs" />}
+                <span>{theme.actions.revive}</span>
               </button>
 
               <button
                 onClick={() => actions.purge(tab.cleanUrl)}
-                className={cls.btn.danger}
-                title="Permanently remove from Graveyard"
+                className={theme.cls.btn.danger}
+                title={theme.actions.purgeTooltip}
               >
-                <IconPurge className="text-xs" />
-                <span>PURGE</span>
+                {isSponge ? <IconFishBucket className="text-xs" /> : <IconPurge className="text-xs" />}
+                <span>{theme.actions.purge}</span>
               </button>
             </>
           ) : (
             <button
               onClick={() => actions.sweep(tab)}
-              className={cls.btn.sweep}
-              title="Close tab in Chrome and bury into Graveyard"
+              className={theme.cls.btn.sweep}
+              title={theme.actions.sweepTooltip}
             >
-              <IconSweep className="text-xs" />
-              <span>SWEEP</span>
+              {isSponge ? <IconFishingNet className="text-xs" /> : <IconSweep className="text-xs" />}
+              <span>{theme.actions.sweep}</span>
             </button>
           )}
         </div>

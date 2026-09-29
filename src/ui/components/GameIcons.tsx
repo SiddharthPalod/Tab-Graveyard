@@ -17,6 +17,13 @@ import {
   GiMagicPotion,
   GiShatteredHeart,
   GiBrain,
+  GiHamburger,
+  GiJellyfish,
+  GiCrab,
+  GiAnchor,
+  GiBubbles,
+  GiFishBucket,
+  GiFishingNet,
 } from 'react-icons/gi';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -41,3 +48,12 @@ export const IconCoffin = (props: IconProps) => <GiCoffin {...props} />;
 export const IconMimic = (props: IconProps) => <GiMimicChest {...props} />;
 export const IconMagic = (props: IconProps) => <GiMagicPotion {...props} />;
 export const IconBrain = (props: IconProps) => <GiBrain {...props} />;
+
+// SpongeBob / Marine icons
+export const IconBurger = (props: IconProps) => <GiHamburger {...props} />;
+export const IconJellyfish = (props: IconProps) => <GiJellyfish {...props} />;
+export const IconCrab = (props: IconProps) => <GiCrab {...props} />;
+export const IconAnchor = (props: IconProps) => <GiAnchor {...props} />;
+export const IconBubbles = (props: IconProps) => <GiBubbles {...props} />;
+export const IconFishBucket = (props: IconProps) => <GiFishBucket {...props} />;
+export const IconFishingNet = (props: IconProps) => <GiFishingNet {...props} />;

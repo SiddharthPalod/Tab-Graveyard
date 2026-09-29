@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ARCHETYPE_META, TabArchetype } from '../../core/behavior';
 import type { FilterOptions, SortOption, DomainCount } from '../../core/searchUtils';
 import { IconSearch } from './GameIcons';
+import { useTheme } from '../themes/useTheme';
 
 export interface SearchBarProps {
   filters:           FilterOptions;
@@ -36,7 +37,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   availableDomains = [],
   placeholder = 'search...',
 }) => {
+  const { theme } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const activeArchMeta = filters.archetype
+    ? (theme.archetypes?.[filters.archetype] || ARCHETYPE_META[filters.archetype])
+    : null;
 
   return (
     <div className="shrink-0 w-full bg-rpg-dark-gray/90 border border-rpg-border rounded-sm overflow-hidden shadow-pixel">
@@ -83,12 +89,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {/* ── Active Filter Pills (Quick Dismiss) ───────────────────────────── */}
       {hasActiveFilters && !drawerOpen && (
         <div className="flex items-center gap-1 flex-wrap px-2 py-1 bg-rpg-bg/80 border-b border-rpg-border text-[7px]">
-          {filters.archetype && (
+          {activeArchMeta && (
             <button
               onClick={() => onChangeFilters({ archetype: undefined })}
               className="font-pixel border border-rpg-yellow/60 text-rpg-yellow bg-rpg-surface px-1 py-0.5 inline-flex items-center gap-1 hover:bg-rpg-yellow hover:text-rpg-bg cursor-pointer"
             >
-              {ARCHETYPE_META[filters.archetype]?.icon} {ARCHETYPE_META[filters.archetype]?.name} ✕
+              {activeArchMeta.icon} {activeArchMeta.name} ✕
             </button>
           )}
 
@@ -156,7 +162,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 ALL
               </button>
               {(Object.keys(ARCHETYPE_META) as TabArchetype[]).map((arch) => {
-                const meta = ARCHETYPE_META[arch];
+                const meta = theme.archetypes?.[arch] || ARCHETYPE_META[arch];
                 const isActive = filters.archetype === arch;
                 return (
                   <button

@@ -1,10 +1,10 @@
 /**
- * src/App.tsx  — Root layout. Wires store → pages. Nothing else.
- * Pure presentation & routing wire. Zero business logic. Zero filtering algorithms.
+ * src/App.tsx  — Root layout. Wires store → pages.
+ * Integrates ThemeProvider for dynamic theme personality switching.
  */
 import React, { useState } from 'react';
 import { useTabs } from './store/useTabs';
-import { cls } from './ui/tokens';
+import { ThemeProvider, useTheme } from './ui/themes/useTheme';
 import { Header }        from './ui/components/Header';
 import { BattleNav, ActivePage } from './ui/components/BattleNav';
 import { SearchBar }     from './ui/components/SearchBar';
@@ -13,7 +13,8 @@ import { GraveyardPage } from './ui/pages/GraveyardPage';
 import { CatacombsPage } from './ui/pages/CatacombsPage';
 import { LivingPage }    from './ui/pages/LivingPage';
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { theme } = useTheme();
   const [activePage, setActivePage] = useState<ActivePage>('graveyard');
   const [hoveredUrl, setHoveredUrl] = useState<string | null>(null);
 
@@ -42,8 +43,8 @@ export const App: React.FC = () => {
   } = useTabs();
 
   return (
-    <div className={cls.shell}>
-      {/* Top Dialog / System Header (Compact & with Level info) */}
+    <div className={theme.cls.shell}>
+      {/* Top Dialog / System Header (Compact, Level info & Theme Switcher) */}
       <Header
         buriedCount={allBuriedTabs.length}
         livingCount={allLivingTabs.length}
@@ -121,5 +122,13 @@ export const App: React.FC = () => {
         onSimulateAging={actions.simulateAging}
       />
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 };
