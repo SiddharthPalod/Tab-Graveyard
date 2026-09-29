@@ -39,7 +39,7 @@ export const BehavioralMirror: React.FC<BehavioralMirrorProps> = ({
           <span>BEHAVIORAL MIRROR</span>
           <span className="text-rpg-light-gray/70 font-sans text-[10.5px]">({activeArchetypes.length} profiles active)</span>
         </span>
-        <span className="text-rpg-light-gray text-[7px]">{isOpen ? '[COLLAPSE ▲]' : '[EXPAND ▼]'}</span>
+        <span className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border">{isOpen ? '▲' : '▼'}</span>
       </button>
 
       {/* Expanded Dashboard */}

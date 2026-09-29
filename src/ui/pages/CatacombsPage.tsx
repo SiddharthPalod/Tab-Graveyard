@@ -6,6 +6,7 @@ import type { TemporalSession } from '../../core/sessionUtils';
 import type { TabActions } from '../../store/useTabs';
 import { TypewriterText } from '../components/RPGPrimitives';
 import { IconTomb, IconRevive, IconPurge, IconMagic } from '../components/GameIcons';
+import { IoIosExpand } from 'react-icons/io';
 
 interface CatacombsPageProps {
   tombstones:       TombstoneRecord[];
@@ -65,63 +66,6 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-2.5">
-      {/* ── Temporal Sessions (Mass Extinctions / Window Restores) ── */}
-      {temporalSessions.length > 0 && (
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 px-1">
-            <IconMagic className="text-xs text-rpg-magic" />
-            <span className="font-pixel text-[8px] text-rpg-magic">TEMPORAL SESSIONS</span>
-            <span className="font-sans text-[10.5px] text-rpg-light-gray/70">
-              (Auto-grouped)
-            </span>
-          </div>
-
-          {temporalSessions.map((sess) => {
-            const isExp = expandedSessionIds[sess.id] ?? false;
-            return (
-              <div key={sess.id} className="p-2 bg-rpg-dark-gray/80 border border-rpg-magic/40 rounded-sm shadow-pixel">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-sans text-[12.5px] text-rpg-magic truncate font-semibold flex items-center gap-1">
-                      <IconMagic className="text-xs shrink-0" />
-                      <span>{sess.title}</span>
-                    </h4>
-                    <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
-                      Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => actions.resurrectSession(sess)}
-                      className="font-pixel text-[8px] bg-sky-700 hover:bg-sky-600 text-white px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
-                    >
-                      <IconRevive className="text-xs" />
-                      <span>RESTORE</span>
-                    </button>
-                    <button
-                      onClick={() => toggleSessionExpand(sess.id)}
-                      className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border"
-                    >
-                      {isExp ? '▲' : '▼'}
-                    </button>
-                  </div>
-                </div>
-
-                {isExp && (
-                  <div className="mt-2 pt-1.5 border-t border-rpg-border/60 space-y-1 pl-1">
-                    {sess.tabs.map((tab) => (
-                      <p key={tab.cleanUrl} className="font-sans text-[11px] text-slate-300 truncate">
-                        • {tab.title || tab.domain} <span className="text-rpg-light-gray/70">({tab.domain})</span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* ── Permanent Tombstone Monuments ── */}
       {tombstones.length > 0 && (
         <div className="space-y-1.5">
@@ -134,13 +78,15 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
           </div>
 
           {tombstones.map((tomb) => {
-            const isExpanded = expandedIds[tomb.id] ?? true;
+            const isExpanded = expandedIds[tomb.id] ?? false;
             const tabCount   = tomb.tabs.length;
 
             return (
               <div key={tomb.id} className="p-2 bg-rpg-dark-gray/80 border border-rpg-border rounded-sm shadow-pixel">
                 {/* Tombstone Header */}
-                <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="flex items-start justify-between gap-2 mb-1.5 cursor-pointer"
+                onClick={() => toggleExpand(tomb.id)}
+                > 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 text-rpg-yellow">
                       <IconTomb className="text-sm shrink-0" />
@@ -174,15 +120,6 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
 
                 {/* Toggle URL list */}
                 <div className="border-t border-rpg-border/60 pt-1 mt-1">
-                  <button
-                    onClick={() => toggleExpand(tomb.id)}
-                    className="w-full flex items-center justify-between text-left font-pixel text-[7.5px] text-rpg-light-gray hover:text-white py-0.5 cursor-pointer"
-                  >
-                    <span>{isExpanded ? '▼ CONTENTS' : '▶ CONTENTS'} ({tabCount} URLs)</span>
-                    <span>{isExpanded ? '[COLLAPSE]' : '[EXPAND]'}</span>
-                  </button>
-
-                  {/* List of URLs inside Tombstone */}
                   {isExpanded && (
                     <div className="mt-1.5 space-y-1 pl-2 border-l border-rpg-border">
                       {tomb.tabs.map((tab: TombstoneTabItem) => (
@@ -210,6 +147,64 @@ export const CatacombsPage: React.FC<CatacombsPageProps> = ({
                     </div>
                   )}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Temporal Sessions (Mass Extinctions / Window Restores) ── */}
+      {temporalSessions.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 px-1">
+            <IconMagic className="text-xs text-rpg-magic" />
+            <span className="font-pixel text-[8px] text-rpg-magic">TEMPORAL SESSIONS</span>
+            <span className="font-sans text-[10.5px] text-rpg-light-gray/70">
+              (Auto-grouped)
+            </span>
+          </div>
+
+          {temporalSessions.map((sess) => {
+            const isExp = expandedSessionIds[sess.id] ?? false;
+            return (
+              <div key={sess.id} className="p-2 bg-rpg-dark-gray/80 border border-rpg-magic/40 rounded-sm shadow-pixel cursor-pointer"
+              onClick={() => toggleSessionExpand(sess.id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-sans text-[12.5px] text-rpg-magic truncate font-semibold flex items-center gap-1">
+                      <IconMagic className="text-xs shrink-0" />
+                      <span>{sess.title}</span>
+                    </h4>
+                    <p className="font-sans text-[10.5px] text-rpg-light-gray/80 mt-0.5">
+                      Closed {formatRelativeTime(sess.timestamp)} • {sess.tabs.length} tabs
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => actions.resurrectSession(sess)}
+                      className="font-pixel text-[8px] bg-sky-700 hover:bg-sky-600 text-white px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all shadow-pixel"
+                    >
+                      <IconRevive className="text-xs" />
+                      <span>RESTORE</span>
+                    </button>
+                    <div
+                      className="font-pixel text-[7.5px] text-rpg-light-gray hover:text-white px-1 py-0.5 cursor-pointer bg-rpg-bg border border-rpg-border"
+                    >
+                      {isExp ? '▲' : '▼'}
+                    </div>
+                  </div>
+                </div>
+
+                {isExp && (
+                  <div className="mt-2 pt-1.5 border-t border-rpg-border/60 space-y-1 pl-1">
+                    {sess.tabs.map((tab) => (
+                      <p key={tab.cleanUrl} className="font-sans text-[11px] text-slate-300 truncate">
+                        • {tab.title || tab.domain} <span className="text-rpg-light-gray/70">({tab.domain})</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
