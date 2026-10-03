@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: Theme Title & Dynamic Theme Selector Dropdown */}
         <div className="flex items-center gap-1.5 shrink-0">
           <HeaderIcon className="text-sm text-rpg-yellow shrink-0" />
-          <span className="font-pixel text-[8.5px] text-rpg-yellow tracking-wide">
+          <span className={theme.header.titleCls || 'font-pixel text-[11px] text-rpg-yellow tracking-wide leading-none'}>
             {theme.header.title}
           </span>
 
@@ -46,14 +46,14 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Level Progression Indicator (Always visible!) */}
         <div
-          className="flex items-center gap-1 bg-rpg-surface px-1.5 py-0.5 border border-rpg-border text-[7px] font-pixel text-rpg-monster cursor-help shrink-0 max-w-[210px]"
+          className="flex items-center gap-1 bg-rpg-surface px-1.5 py-0.5 border border-rpg-border/80 text-[7.5px] font-pixel text-rpg-monster cursor-help shrink-0 max-w-[170px]"
           title={`Level ${levelInfo.level}: ${displayLevelTitle} (${levelInfo.currentXp}/${levelInfo.nextLevelXp} XP)`}
         >
-          <span>LV{levelInfo.level}</span>
-          <span className="text-rpg-light-gray truncate max-w-[95px] font-sans text-[10.5px] font-medium leading-none">
+          <span className="font-bold tracking-tight">LV{levelInfo.level}</span>
+          <span className="text-rpg-light-gray truncate max-w-[75px] font-sans text-[9.5px] font-medium leading-none">
             {displayLevelTitle}
           </span>
-          <div className="w-6 h-1 bg-rpg-bg border border-rpg-border shrink-0 ml-0.5">
+          <div className="w-4 h-1 bg-rpg-bg border border-rpg-border/60 shrink-0 ml-0.5">
             <div
               className="h-full bg-rpg-monster transition-all"
               style={{ width: `${levelInfo.progress}%` }}
@@ -64,11 +64,11 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Dynamic Typewriter Quote (Compact 1-line ticker) */}
       <div className="mt-1 pt-1 border-t border-rpg-border/60 flex items-center justify-between text-xs min-h-4.5">
-        <div className="font-dialogue text-[13px] text-rpg-light-gray truncate max-w-85">
+        <div className="font-dialogue text-[11.5px] text-rpg-light-gray truncate max-w-85 leading-none">
           <TypewriterText text={dynamicQuote} speed={25} />
         </div>
-        <div className="font-pixel flex flex-row items-center gap-1 text-[0.5rem] text-rpg-mid-gray shrink-0">
-          <CounterIcon className="text-sm shrink-0" />
+        <div className="font-pixel flex flex-row items-center gap-1 text-[8px] text-rpg-mid-gray shrink-0">
+          <CounterIcon className="text-xs shrink-0" />
           <p>{buriedCount}</p>
         </div>
       </div>

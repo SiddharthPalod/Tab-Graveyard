@@ -24,6 +24,20 @@ import {
   GiBubbles,
   GiFishBucket,
   GiFishingNet,
+  GiGreekTemple,
+  GiOpenBook,
+  GiScrollUnfurled,
+  GiQuillInk,
+  GiCandlebright,
+  GiOwl,
+  GiWaxSeal,
+  GiProcessor,
+  GiRetroController,
+  GiWireframeGlobe,
+  GiCyberEye,
+  GiAudioCassette,
+  GiSave,
+  GiLaserBurst,
 } from 'react-icons/gi';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -57,3 +71,50 @@ export const IconAnchor = (props: IconProps) => <GiAnchor {...props} />;
 export const IconBubbles = (props: IconProps) => <GiBubbles {...props} />;
 export const IconFishBucket = (props: IconProps) => <GiFishBucket {...props} />;
 export const IconFishingNet = (props: IconProps) => <GiFishingNet {...props} />;
+
+// Gothic Academy / Classical Library icons
+export const IconTemple = (props: IconProps) => <GiGreekTemple {...props} />;
+export const IconBook = (props: IconProps) => <GiOpenBook {...props} />;
+export const IconScroll = (props: IconProps) => <GiScrollUnfurled {...props} />;
+export const IconQuill = (props: IconProps) => <GiQuillInk {...props} />;
+export const IconCandle = (props: IconProps) => <GiCandlebright {...props} />;
+export const IconOwl = (props: IconProps) => <GiOwl {...props} />;
+export const IconWaxSeal = (props: IconProps) => <GiWaxSeal {...props} />;
+
+// Cyberpunk / Vaporwave / 80s Arcade icons
+export const IconProcessor = (props: IconProps) => <GiProcessor {...props} />;
+export const IconRetroController = (props: IconProps) => <GiRetroController {...props} />;
+export const IconWireframeGlobe = (props: IconProps) => <GiWireframeGlobe {...props} />;
+export const IconCyberEye = (props: IconProps) => <GiCyberEye {...props} />;
+export const IconCassette = (props: IconProps) => <GiAudioCassette {...props} />;
+export const IconFloppy = (props: IconProps) => <GiSave {...props} />;
+export const IconLaser = (props: IconProps) => <GiLaserBurst {...props} />;
+
+// Corporate / Clean Professional icons
+import {
+  FiFolder,
+  FiLayers,
+  FiArchive,
+  FiRotateCw,
+  FiTrash2,
+  FiX,
+  FiClock,
+  FiInbox,
+  FiCheck,
+  FiActivity,
+  FiGlobe,
+  FiSliders,
+} from 'react-icons/fi';
+
+export const IconCorpFolder = (props: IconProps) => <FiFolder {...props} />;
+export const IconCorpLayers = (props: IconProps) => <FiLayers {...props} />;
+export const IconCorpArchive = (props: IconProps) => <FiArchive {...props} />;
+export const IconCorpRestore = (props: IconProps) => <FiRotateCw {...props} />;
+export const IconCorpTrash = (props: IconProps) => <FiTrash2 {...props} />;
+export const IconCorpClose = (props: IconProps) => <FiX {...props} />;
+export const IconCorpClock = (props: IconProps) => <FiClock {...props} />;
+export const IconCorpInbox = (props: IconProps) => <FiInbox {...props} />;
+export const IconCorpCheck = (props: IconProps) => <FiCheck {...props} />;
+export const IconCorpActivity = (props: IconProps) => <FiActivity {...props} />;
+export const IconCorpGlobe = (props: IconProps) => <FiGlobe {...props} />;
+export const IconCorpSliders = (props: IconProps) => <FiSliders {...props} />;

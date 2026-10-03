@@ -214,9 +214,9 @@ Strip stop words and count occurrences. Present this as "Your forgotten interest
 
 ---
 
-## Phase 9 — Optional Local Embeddings
+## Phase 9 — Prompt API
 
-If you want to push the technical boundaries, add a small, in-browser embedding model (like Xenova/transformers.js) to map semantic relationships.
+If you want to push the technical boundaries, add a small, in-browser embedding model to map semantic relationships.
 
 ```text
       Tab Title + URL

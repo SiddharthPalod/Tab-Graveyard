@@ -66,6 +66,7 @@ const mockActions: any = {
   resurrectSession: () => Promise.resolve(),
   purgeSession: () => Promise.resolve(),
   convertSessionToTombstone: () => Promise.resolve(),
+  renameTombstone: () => Promise.resolve(),
   purgeSelected: () => Promise.resolve(),
   refresh: () => Promise.resolve(),
   setFilter: () => {},
@@ -162,7 +163,7 @@ describe('UI Pages Deep Render Tests (Regression Suite)', () => {
       })
     );
     expect(html).toContain('Late Night Research');
-    expect(html).toContain('RESURRECT');
+    expect(html).toMatch(/REVIVE|RESURRECT/);
     expect(html).toContain('PURGE');
   });
 

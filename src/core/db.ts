@@ -34,9 +34,16 @@ export interface TombstoneRecord {
   tabs: TombstoneTabItem[]; // List of URLs and metadata
 }
 
+export interface AICacheRecord {
+  key: string;            // Cache key, e.g. "session:xyz" or "clusters:latest"
+  value: any;             // Arbitrary cached JSON or string
+  updatedAt: number;      // Unix ms
+}
+
 export class GraveyardDB extends Dexie {
   tabs!: Table<TabRecord, string>;
   tombstones!: Table<TombstoneRecord, string>;
+  aiCache!: Table<AICacheRecord, string>;
 
   constructor() {
     super('TabGraveyardDB_v2');
@@ -47,6 +54,28 @@ export class GraveyardDB extends Dexie {
       tabs: 'cleanUrl, tabId, domain, status, openedAt, lastActivatedAt',
       tombstones: 'id, createdAt',
     });
+    this.version(3).stores({
+      tabs: 'cleanUrl, tabId, domain, status, openedAt, lastActivatedAt',
+      tombstones: 'id, createdAt',
+      aiCache: 'key, updatedAt',
+    });
+  }
+
+  async getAICache<T>(key: string): Promise<T | null> {
+    try {
+      const row = await this.aiCache.get(key);
+      return row ? (row.value as T) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async setAICache(key: string, value: any): Promise<void> {
+    try {
+      await this.aiCache.put({ key, value, updatedAt: Date.now() });
+    } catch {
+      // Ignored
+    }
   }
 
   /**
@@ -172,6 +201,13 @@ export class GraveyardDB extends Dexie {
    */
   async deleteTombstone(id: string): Promise<void> {
     await this.tombstones.delete(id);
+  }
+
+  /**
+   * Renames an existing tombstone.
+   */
+  async renameTombstone(id: string, newTitle: string): Promise<void> {
+    await this.tombstones.update(id, { title: newTitle.trim() });
   }
 
   /**

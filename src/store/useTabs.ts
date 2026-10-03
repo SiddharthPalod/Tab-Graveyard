@@ -56,7 +56,8 @@ export interface TabActions {
   collapseTopicToTombstone:     (topic: TopicCluster) => Promise<void>;
   resurrectSession:             (session: TemporalSession) => Promise<void>;
   purgeSession:                 (session: TemporalSession) => Promise<void>;
-  convertSessionToTombstone:    (session: TemporalSession) => Promise<void>;
+  convertSessionToTombstone:    (session: TemporalSession, customTitle?: string) => Promise<void>;
+  renameTombstone:              (id: string, newTitle: string) => Promise<void>;
   purgeSelected:                (tabs: TabRecord[]) => Promise<void>;
   refresh:                      () => Promise<void>;
   // Store-level state mutations
@@ -157,25 +158,34 @@ export function useTabs(): TabStore {
       const tombs   = await db.tombstones.toArray();
 
       // Ground-truth reconciliation with Chrome open tabs
+      // Cross-reference DB against live Chrome tabs to ensure real-time accuracy & tabId syncing
       if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
         try {
           const openChromeTabs = await chrome.tabs.query({});
-          const openCleanUrls  = new Set<string>();
+          const liveTabsMap    = new Map<string, number>(); // cleanUrl -> tabId
 
           for (const oct of openChromeTabs) {
             const raw = oct.url || oct.pendingUrl || '';
             if (oct.id && isTrackableUrl(raw)) {
               const clean = normalizeUrl(raw);
-              if (clean) openCleanUrls.add(clean);
+              if (clean) liveTabsMap.set(clean, oct.id);
             }
           }
 
-          // If a record in DB is living, but is NOT physically open in Chrome, mark it dead!
+          // Reconcile DB tabs against live Chrome tabs
           for (const r of records) {
-            if (r.status !== 'dead' && !openCleanUrls.has(r.cleanUrl)) {
+            const liveTabId = liveTabsMap.get(r.cleanUrl);
+            if (liveTabId !== undefined) {
+              // Tab is actively open in Chrome! Ensure tabId is up-to-date
+              if (r.tabId !== liveTabId) {
+                r.tabId = liveTabId;
+                await db.tabs.update(r.cleanUrl, { tabId: liveTabId }).catch(() => {});
+              }
+            } else if (r.status !== 'dead') {
+              // If a record in DB was living, but is NOT physically open in Chrome, mark it dead!
               r.status = 'dead';
               r.tabId  = undefined;
-              await db.markTabDeadByUrl(r.cleanUrl);
+              await db.markTabDeadByUrl(r.cleanUrl).catch(() => {});
             }
           }
         } catch (e) {
@@ -361,11 +371,43 @@ export function useTabs(): TabStore {
   };
 
   const sweep = async (tab: TabRecord) => {
-    if (tab.tabId) {
-      await chrome.tabs.remove(tab.tabId); // triggers onRemoved → markTabDead
-    } else {
-      await db.tabs.update(tab.cleanUrl, { status: 'dead' });
+    let closedInChrome = false;
+
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      // 1. Try closing by tab.tabId first
+      if (typeof tab.tabId === 'number') {
+        try {
+          await chrome.tabs.remove(tab.tabId);
+          closedInChrome = true;
+        } catch {
+          // tabId may be stale or tab was detached; proceed to fallback query
+        }
+      }
+
+      // 2. Fallback: Query all open tabs in Chrome to find matching URL
+      if (!closedInChrome && chrome.tabs.query) {
+        try {
+          const openTabs = await chrome.tabs.query({});
+          for (const ot of openTabs) {
+            const raw = ot.url || ot.pendingUrl || '';
+            if (ot.id && isTrackableUrl(raw) && normalizeUrl(raw) === tab.cleanUrl) {
+              try {
+                await chrome.tabs.remove(ot.id);
+                closedInChrome = true;
+                break;
+              } catch {
+                // Ignore removal failure
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[useTabs] Failed to query Chrome tabs during sweep:', err);
+        }
+      }
     }
+
+    // 3. Mark dead in IndexedDB (moves to Graveyard) & record telemetry
+    await db.tabs.update(tab.cleanUrl, { status: 'dead', tabId: undefined });
     await recordTelemetryEvent('sweep', 1);
     await loadData();
   };
@@ -402,12 +444,32 @@ export function useTabs(): TabStore {
     await recordTelemetryEvent('tombstone', 1);
 
     // Close all open tabs in Chrome
-    const tabIdsToClose = selectedTabs.map((t) => t.tabId).filter((id): id is number => typeof id === 'number');
-    if (tabIdsToClose.length > 0) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
       try {
-        await chrome.tabs.remove(tabIdsToClose);
+        const tabIdsToClose = new Set<number>();
+        const targetCleanUrls = new Set(selectedTabs.map((t) => t.cleanUrl));
+
+        if (chrome.tabs.query) {
+          const openTabs = await chrome.tabs.query({});
+          for (const ot of openTabs) {
+            const raw = ot.url || ot.pendingUrl || '';
+            if (ot.id && isTrackableUrl(raw) && targetCleanUrls.has(normalizeUrl(raw))) {
+              tabIdsToClose.add(ot.id);
+            }
+          }
+        }
+
+        for (const t of selectedTabs) {
+          if (typeof t.tabId === 'number') tabIdsToClose.add(t.tabId);
+        }
+
+        if (tabIdsToClose.size > 0) {
+          await chrome.tabs.remove(Array.from(tabIdsToClose)).catch((err) => {
+            console.warn('[useTabs] Some tabs were already closed in Chrome:', err);
+          });
+        }
       } catch (err) {
-        console.warn('[useTabs] Some tabs were already closed in Chrome:', err);
+        console.warn('[useTabs] Error closing collapsed tabs in Chrome:', err);
       }
     }
 
@@ -415,7 +477,8 @@ export function useTabs(): TabStore {
   };
 
   /**
-   * Resurrects all URLs inside a Tombstone back into Chrome tabs, then dissolves the Tombstone.
+   * Resurrects all URLs inside a Tombstone back into Chrome tabs.
+   * Preserves the Permanent Tombstone monument intact unless explicitly shattered.
    */
   const resurrectTombstone = async (tombstone: TombstoneRecord) => {
     for (const item of tombstone.tabs) {
@@ -433,7 +496,7 @@ export function useTabs(): TabStore {
       }
     }
 
-    await db.deleteTombstone(tombstone.id);
+    // Permanent monuments remain standing unless explicitly shattered
     await recordTelemetryEvent('revive', tombstone.tabs.length);
     await loadData();
   };
@@ -511,16 +574,30 @@ export function useTabs(): TabStore {
 
   /**
    * Converts a Temporal Session into a Permanent Tombstone monument.
+   * Removes constituent tabs from loose dead tabs so it cleanly transitions.
    */
-  const convertSessionToTombstone = async (session: TemporalSession) => {
+  const convertSessionToTombstone = async (session: TemporalSession, customTitle?: string) => {
     const items: TombstoneTabItem[] = session.tabs.map((t) => ({
       cleanUrl: t.cleanUrl,
       url:      t.url,
       title:    t.title || 'Untitled Tab',
       domain:   t.domain || 'web',
     }));
-    await db.createTombstone(session.title, items);
+    const titleToUse = customTitle?.trim() || session.title;
+    await db.createTombstone(titleToUse, items);
+    // Remove the loose dead tabs so the session moves from Temporary to Permanent
+    await db.tabs.bulkDelete(session.tabs.map((t) => t.cleanUrl));
     await recordTelemetryEvent('tombstone', 1);
+    await loadData();
+  };
+
+  /**
+   * Renames an existing permanent Tombstone.
+   */
+  const renameTombstone = async (id: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+    await db.renameTombstone(id, trimmed);
     await loadData();
   };
 
@@ -530,15 +607,36 @@ export function useTabs(): TabStore {
    */
   const sweepByArchetype = async (archetype: TabArchetype) => {
     const targetTabs = archetypes[archetype];
-    const tabIds = targetTabs
-      .map((t) => t.tabId)
-      .filter((id): id is number => typeof id === 'number');
+    if (!targetTabs || targetTabs.length === 0) return;
 
-    if (tabIds.length > 0) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
       try {
-        await chrome.tabs.remove(tabIds);
+        const tabIdsToClose = new Set<number>();
+        const targetCleanUrls = new Set(targetTabs.map((t) => t.cleanUrl));
+
+        // 1. Gather live tabIds from open Chrome tabs
+        if (chrome.tabs.query) {
+          const openTabs = await chrome.tabs.query({});
+          for (const ot of openTabs) {
+            const raw = ot.url || ot.pendingUrl || '';
+            if (ot.id && isTrackableUrl(raw) && targetCleanUrls.has(normalizeUrl(raw))) {
+              tabIdsToClose.add(ot.id);
+            }
+          }
+        }
+
+        // 2. Include any existing tabIds from targetTabs
+        for (const t of targetTabs) {
+          if (typeof t.tabId === 'number') tabIdsToClose.add(t.tabId);
+        }
+
+        if (tabIdsToClose.size > 0) {
+          await chrome.tabs.remove(Array.from(tabIdsToClose)).catch((err) => {
+            console.warn('[useTabs] Some tabs were already closed:', err);
+          });
+        }
       } catch (err) {
-        console.warn('[useTabs] Some tabs were already closed:', err);
+        console.warn('[useTabs] Error sweeping archetype tabs in Chrome:', err);
       }
     }
 
@@ -568,7 +666,7 @@ export function useTabs(): TabStore {
    */
   const collapseTopicToTombstone = async (topic: TopicCluster) => {
     if (!topic || topic.tabs.length === 0) return;
-    const title = `${topic.icon} ${topic.name} (${topic.count} tabs)`;
+    const title = `${topic.icon} ${topic.name}`;
     await bundleGravesToTombstone(topic.tabs, title);
   };
 
@@ -626,6 +724,7 @@ export function useTabs(): TabStore {
     resurrectSession,
     purgeSession,
     convertSessionToTombstone,
+    renameTombstone,
     purgeSelected,
     refresh: loadData,
     setFilter,

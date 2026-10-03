@@ -77,6 +77,22 @@ export const ThemeProvider: React.FC<{
         document.body.style.color = themeToApply.palette.white;
       }
     }
+
+    if (themeToApply.fonts) {
+      if (themeToApply.fonts.pixel) {
+        root.style.setProperty('--font-pixel', themeToApply.fonts.pixel);
+      }
+      if (themeToApply.fonts.dialogue) {
+        root.style.setProperty('--font-dialogue', themeToApply.fonts.dialogue);
+      }
+      if (themeToApply.fonts.sans) {
+        root.style.setProperty('--font-sans', themeToApply.fonts.sans);
+      }
+    } else {
+      root.style.setProperty('--font-pixel', "'Press Start 2P', monospace");
+      root.style.setProperty('--font-dialogue', "'VT323', monospace");
+      root.style.setProperty('--font-sans', "'Inter', system-ui, sans-serif");
+    }
   }, []);
 
   // Initial load from chrome storage or localStorage

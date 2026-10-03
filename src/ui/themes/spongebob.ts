@@ -18,6 +18,7 @@ export const spongebobTheme: ThemePersonality = {
   header: {
     title: 'BIKINI',
     subtitle: 'Krusty Krab Operations',
+    titleCls: 'font-pixel text-[11.5px] text-rpg-yellow tracking-wide leading-none',
     levelTitle: (level, _defaultTitle) => {
       const titles = [
         'Dishwasher',          // LV1
@@ -37,18 +38,18 @@ export const spongebobTheme: ThemePersonality = {
         return `* [French Narrator]: "${awakeningMessage}"`;
       }
       if (livingCount >= 18) {
-        return `* [Squidward]: "${livingCount} tabs swimming?! My clarinet peace is ruined!"`;
+        return `* [Squidward]: "${livingCount} tabs ruin my peace!"`;
       }
       if (buriedCount > 30) {
-        return `* [Mr. Krabs]: "Over ${buriedCount} tabs sunk to Davy Jones! Look at all that RAM!"`;
+        return `* [Mr. Krabs]: "${buriedCount} tabs sunk! Free RAM!"`;
       }
       if (buriedCount > 10) {
-        return `* [Patrick]: "The inner machinations of me mind laid ${buriedCount} tabs to rest."`;
+        return `* [Patrick]: "${buriedCount} tabs laid to rest."`;
       }
       if (buriedCount > 0) {
-        return `* [SpongeBob]: "${buriedCount} tabs saved safe! I'm ready! I'm ready!"`;
+        return `* [SpongeBob]: "${buriedCount} tabs safe! I'm ready!"`;
       }
-      return '* [French Narrator]: "Ze seabed is clean and peaceful."';
+      return '* [French Narrator]: "Ze seabed is clean."';
     },
   },
 
@@ -153,25 +154,31 @@ export const spongebobTheme: ThemePersonality = {
   },
 
   palette: {
-    bg:                  '#F0F8FF',
-    white:               '#0F172A',
-    darkGray:            '#FFFFFF',
-    surface:             '#E0F2FE',
-    surfaceHover:        '#BAE6FD',
-    border:              '#0284C7',
-    midGray:             '#7B4B3A',
-    lightGray:           '#475569',
-    soul:                '#BE123C',
-    determination:       '#854D0E',
-    monster:             '#6D28D9',
-    magic:               '#0369A1',
-    heart:               '#166534',
-    yellow:              '#854D0E',
-    shadow:              '2px 2px 0 rgba(0, 163, 224, 0.35)',
-    shadowHover:         '1px 1px 0 rgba(0, 163, 224, 0.35)',
-    scrollbarTrack:      '#F0F8FF',
-    scrollbarThumb:      '#38BDF8',
-    scrollbarThumbHover: '#F9E03B',
+    bg:                  '#F1F5F9', // Slate-100: Soft cool pale neutral sea-mist, no screen glare
+    white:               '#1E293B', // Slate-800: Deep soft charcoal-navy (13.98:1 contrast, never harsh)
+    darkGray:            '#F8FAFC', // Slate-50: Elevated soft off-white card surface (zero pure-white glare)
+    surface:             '#E2E8F0', // Slate-200: Calm neutral inset pill surface
+    surfaceHover:        '#CBD5E1', // Slate-300: Distinct clear hover state
+    border:              '#94A3B8', // Slate-400: Balanced structural neutral border
+    midGray:             '#0369A1', // Sky-700: Ocean blue accent
+    lightGray:           '#475569', // Slate-600: Secondary text (7.24:1 AAA contrast on card)
+    soul:                '#BE123C', // Rose-700: Patrick Coral
+    determination:       '#92400E', // Amber-800: Krusty Gold (passes WCAG AA even on inset surfaces)
+    monster:             '#6D28D9', // Purple-700: Jellyfish Purple
+    magic:               '#0284C7', // Sky-600: Ocean Blue
+    heart:               '#166534', // Green-800: Seaweed Green
+    yellow:              '#92400E', // Amber-800: Warm accessible gold
+    shadow:              '0 1px 2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04)',
+    shadowHover:         '0 2px 4px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06)',
+    scrollbarTrack:      '#F1F5F9',
+    scrollbarThumb:      '#94A3B8',
+    scrollbarThumbHover: '#0284C7',
+  },
+
+  fonts: {
+    pixel:    "'Titan One', 'Comic Sans MS', cursive, sans-serif",
+    dialogue: "'VT323', monospace",
+    sans:     "'Inter', system-ui, -apple-system, sans-serif",
   },
 
   labels: {
@@ -208,7 +215,7 @@ export const spongebobTheme: ThemePersonality = {
     cremate:          (n) => `CHUM (${n})`,
     keepLabel:        'KEEP:',
     keepTooltip:      'Number of newest tabs to keep stocked',
-    selectAll:        '[ALL]',
+    selectAll:        '[SELECT ALL]',
     deselect:         (n) => `[CLEAR (${n})]`,
     resurrectSession: 'REVIVE',
     purgeSession:     'CHUM',
@@ -231,19 +238,19 @@ export const spongebobTheme: ThemePersonality = {
 
   cls: {
     shell: 'flex flex-col w-popup h-popup bg-rpg-bg text-rpg-white font-sans select-none overflow-hidden p-2 gap-1.5',
-    box:   'border border-[#0284C7] bg-white shadow-pixel rounded-sm',
-    card:  'border border-[#0284C7]/40 bg-white hover:bg-[#F0F9FF] hover:border-[#0284C7] transition-all rounded-sm shadow-pixel',
+    box:   'border border-[#94A3B8] bg-rpg-dark-gray shadow-pixel rounded-sm',
+    card:  'border border-[#CBD5E1] bg-rpg-dark-gray hover:bg-rpg-surface hover:border-[#0284C7] transition-all rounded-sm shadow-pixel',
     btn: {
-      // SpongeBob Yellow CTA: #F9E03B background with deep #1E1B18 dark text (12.86:1 contrast ratio!)
-      revive: 'font-pixel text-[8px] bg-[#F9E03B] hover:bg-[#ffe853] text-[#1e1b18] border border-[#a16207] font-bold px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
+      // SpongeBob Golden Amber CTA: #F59E0B background with deep #0F172A dark text (8.31:1 contrast ratio!)
+      revive: 'font-pixel text-[10px] bg-[#F59E0B] hover:bg-[#D97706] text-[#0F172A] border border-[#B45309] font-bold px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
       // Plankton Chum Bucket red danger action: Rose-700 with white text (6.29:1 contrast ratio!)
-      danger: 'font-pixel text-[8px] bg-[#BE123C] hover:bg-[#9F1239] text-white font-bold border border-[#9F1239] px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
+      danger: 'font-pixel text-[10px] bg-[#BE123C] hover:bg-[#9F1239] text-white font-bold border border-[#9F1239] px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
       // Ocean Blue Jellyfish Net utility action: Sky-700 with white text (5.93:1 contrast ratio!)
-      sweep:  'font-pixel text-[8px] bg-[#0369A1] hover:bg-[#075985] text-white font-bold border border-[#075985] px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
-      // Subtle secondary button: Sky-100 bg with Sky-800 text (7.67:1 contrast ratio!)
-      subtle: 'font-pixel text-[8px] bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#075985] hover:text-[#0C4A6E] border border-[#0284C7]/60 px-1.5 py-1 inline-flex items-center gap-1 cursor-pointer transition-all rounded-none',
-      // Krabby formula action button: #F9E03B with dark text (12.86:1 contrast ratio!)
-      accent: 'font-pixel text-[8px] bg-[#F9E03B] hover:bg-[#ffe853] text-[#1e1b18] font-bold border border-[#a16207] px-2.5 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-pixel',
+      sweep:  'font-pixel text-[10px] bg-[#0369A1] hover:bg-[#0284C7] text-white font-bold border border-[#075985] px-2 py-1 uppercase inline-flex items-center gap-1 cursor-pointer transition-all rounded-none shadow-pixel hover:translate-y-[1px]',
+      // Subtle secondary button: Slate-200 bg with Slate-900 text (10.5:1 contrast ratio!)
+      subtle: 'font-pixel text-[10px] bg-[#E2E8F0] hover:bg-[#CBD5E1] text-[#0F172A] border border-[#94A3B8] px-1.5 py-1 inline-flex items-center gap-1 cursor-pointer transition-all rounded-none',
+      // Krabby formula action button: Warm amber CTA (8.31:1 contrast ratio!)
+      accent: 'font-pixel text-[10px] bg-[#F59E0B] hover:bg-[#D97706] text-[#0F172A] font-bold border border-[#B45309] px-2.5 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-pixel',
     },
     badge: {
       alive:     'text-[#166534] border-[#166534]/50 bg-[#DCFCE7]', // 6.49:1
@@ -251,13 +258,13 @@ export const spongebobTheme: ThemePersonality = {
       forgotten: 'text-[#854D0E] border-[#854D0E]/50 bg-[#FEF3C7]', // 6.15:1
       dead:      'text-[#0369A1] border-[#0369A1]/50 bg-[#E0F2FE]', // 5.17:1
     },
-    badgeBase: 'font-pixel text-[7px] border px-1 py-0.5 rounded-none whitespace-nowrap',
+    badgeBase: 'font-pixel text-[9px] border px-1.5 py-0.5 rounded-none whitespace-nowrap',
     text: {
       pixel:    'font-pixel',
       dialogue: 'font-dialogue text-base leading-snug',
       sans:     'font-sans text-xs',
-      muted:    'text-[#475569]', // 7.58:1 on white
-      label:    'font-pixel text-[8px] text-[#854D0E] tracking-wider', // 6.85:1 on white
+      muted:    'text-[#475569]', // 7.24:1 on card
+      label:    'font-pixel text-[9.5px] text-[#92400E] tracking-wider',
     },
   },
 

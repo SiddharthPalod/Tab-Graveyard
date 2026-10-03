@@ -5,6 +5,8 @@ import type { TabArchetype, TabViewModel } from '../../core/behavior';
 import type { TabActions } from '../../store/useTabs';
 import { TypewriterText } from '../components/RPGPrimitives';
 import { useTheme } from '../themes/useTheme';
+import { useSmartAI } from '../hooks/useSmartAI';
+import { inferSmartSessionTitle } from '../../core/ai';
 
 interface LivingPageProps {
   tabs:        TabViewModel[];
@@ -38,9 +40,11 @@ export const LivingPage: React.FC<LivingPageProps> = ({
   const EmptyLivingIcon = theme.icons.emptyLiving;
   const VaultIcon = theme.icons.vault;
 
+  const { isAiAvailable } = useSmartAI();
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen]     = useState(false);
   const [customTitle, setCustomTitle]   = useState('');
+  const [isAiNaming, setIsAiNaming]     = useState(false);
 
   if (loading) {
     return (
@@ -56,7 +60,7 @@ export const LivingPage: React.FC<LivingPageProps> = ({
         <div className="flex justify-center text-rpg-mid-gray">
           <EmptyLivingIcon className="text-4xl" />
         </div>
-        <p className="text-slate-200 font-sans text-xs">
+        <p className="text-rpg-white font-sans text-xs">
           <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyLiving} />
         </p>
       </div>
@@ -81,6 +85,19 @@ export const LivingPage: React.FC<LivingPageProps> = ({
       const all: Record<string, boolean> = {};
       tabs.forEach((t) => { all[t.cleanUrl] = true; });
       setSelectedUrls(all);
+    }
+  };
+
+  const handleAiName = async () => {
+    if (targetTabs.length === 0) return;
+    setIsAiNaming(true);
+    try {
+      const res = await inferSmartSessionTitle(targetTabs);
+      if (res.title) setCustomTitle(res.title);
+    } catch {
+      // Ignored
+    } finally {
+      setIsAiNaming(false);
     }
   };
 
@@ -112,6 +129,17 @@ export const LivingPage: React.FC<LivingPageProps> = ({
                 className="flex-1 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
+              {isAiAvailable && (
+                <button
+                  type="button"
+                  onClick={handleAiName}
+                  disabled={isAiNaming}
+                  className="flex items-center gap-1 px-1.5 py-1 text-[8px] font-pixel text-rpg-yellow bg-rpg-surface border border-rpg-yellow/50 hover:bg-rpg-yellow/20 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                  title="Auto-generate title with Gemini Nano"
+                >
+                  <span>✨ {isAiNaming ? '...' : 'AI'}</span>
+                </button>
+              )}
               <button 
                 onClick={handleConfirmCollapse} 
                 className={theme.cls.btn.accent}

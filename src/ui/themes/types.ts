@@ -68,6 +68,12 @@ export interface ThemeLabels {
   collapseArchetype: string; // e.g. "TO TOMBSTONE" vs "TO VAULT"
 }
 
+export interface ThemeFonts {
+  pixel:    string;
+  dialogue: string;
+  sans:     string;
+}
+
 export interface ThemePersonality {
   id:        ThemeId;
   name:      string;
@@ -79,6 +85,7 @@ export interface ThemePersonality {
   header: {
     title: string;
     subtitle: string;
+    titleCls?: string;
     levelTitle: (level: number, defaultTitle: string) => string;
     getQuote: (ctx: {
       buriedCount: number;
@@ -106,6 +113,9 @@ export interface ThemePersonality {
 
   // Theme palette - pure data-driven CSS variables, zero hardcoding in index.css
   palette: ThemePalette;
+
+  // Theme typography - pure data-driven font families
+  fonts?: ThemeFonts;
 
   // Theme domain labels
   labels: ThemeLabels;

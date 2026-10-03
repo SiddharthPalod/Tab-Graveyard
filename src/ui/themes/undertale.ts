@@ -24,22 +24,23 @@ export const undertaleTheme: ThemePersonality = {
   header: {
     title: 'GRAVEYARD',
     subtitle: 'Underground Tab Necropolis',
+    titleCls: 'font-pixel text-[8.5px] text-rpg-yellow tracking-wide leading-none',
     levelTitle: (_level, defaultTitle) => defaultTitle,
     getQuote: ({ buriedCount, livingCount, awakeningMessage }) => {
       if (awakeningMessage) {
         return `* ${awakeningMessage}`;
       }
       if (livingCount >= 18) {
-        return `* The dead are restless. Your RAM weeps with ${livingCount} open tabs.`;
+        return `* RAM weeps with ${livingCount} open tabs.`;
       }
       if (buriedCount > 30) {
-        return `* A vast sea of ${buriedCount} souls sleeps beneath the soil.`;
+        return `* ${buriedCount} souls rest in peace.`;
       }
       if (buriedCount > 10) {
-        return `* Restless spirits wander. ${buriedCount} tabs laid to rest.`;
+        return `* ${buriedCount} tabs laid to rest.`;
       }
       if (buriedCount > 0) {
-        return `* Seeing ${buriedCount} buried tabs fills you with DETERMINATION.`;
+        return `* ${buriedCount} buried tabs: DETERMINATION.`;
       }
       return '* The graveyard is quiet... peace reigns.';
     },
@@ -167,6 +168,12 @@ export const undertaleTheme: ThemePersonality = {
     scrollbarThumbHover: '#FFD32A',
   },
 
+  fonts: {
+    pixel:    "'Press Start 2P', monospace",
+    dialogue: "'VT323', monospace",
+    sans:     "'Inter', system-ui, sans-serif",
+  },
+
   labels: {
     stateDead:         'Buried',
     stateAlive:        'Resting',
@@ -203,7 +210,7 @@ export const undertaleTheme: ThemePersonality = {
     keepTooltip:      'Number of newest dead tabs to keep',
     selectAll:        '[SELECT ALL]',
     deselect:         (n) => `[DESELECT (${n})]`,
-    resurrectSession: 'RESURRECT',
+    resurrectSession: 'REVIVE',
     purgeSession:     'PURGE',
     reviveAll:        'REVIVE ALL',
     simulateDev:      '[DEV: +4 DAYS]',

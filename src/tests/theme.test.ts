@@ -5,6 +5,9 @@ import { renderToString } from 'react-dom/server';
 import { THEMES, getTheme, DEFAULT_THEME_ID } from '../ui/themes';
 import { undertaleTheme } from '../ui/themes/undertale';
 import { spongebobTheme } from '../ui/themes/spongebob';
+import { academiaTheme } from '../ui/themes/academia';
+import { cyberpunkTheme } from '../ui/themes/cyberpunk';
+import { corporateTheme } from '../ui/themes/corporate';
 import { ThemeProvider } from '../ui/themes/useTheme';
 import { Header } from '../ui/components/Header';
 import { BattleNav } from '../ui/components/BattleNav';
@@ -43,17 +46,38 @@ const mockActions: any = {
 };
 
 describe('Theme Engine & Registry Tests', () => {
-  it('has both undertale and spongebob themes registered', () => {
+  it('has undertale, spongebob, academia, cyberpunk, and corporate themes registered', () => {
     expect(THEMES.undertale).toBeDefined();
     expect(THEMES.spongebob).toBeDefined();
+    expect(THEMES.academia).toBeDefined();
+    expect(THEMES.cyberpunk).toBeDefined();
+    expect(THEMES.corporate).toBeDefined();
     expect(DEFAULT_THEME_ID).toBe('undertale');
   });
 
   it('safely resolves theme by id and falls back on invalid id', () => {
     expect(getTheme('undertale').id).toBe('undertale');
     expect(getTheme('spongebob').id).toBe('spongebob');
+    expect(getTheme('academia').id).toBe('academia');
+    expect(getTheme('cyberpunk').id).toBe('cyberpunk');
+    expect(getTheme('corporate').id).toBe('corporate');
     expect(getTheme('non_existent').id).toBe('undertale');
     expect(getTheme(null).id).toBe('undertale');
+  });
+
+  it('each theme provides its own distinctive, cohesive typography configuration', () => {
+    expect(undertaleTheme.fonts?.pixel).toContain('Press Start 2P');
+    expect(spongebobTheme.fonts?.pixel).toContain('Titan One');
+    expect(academiaTheme.fonts?.pixel).toContain('MedievalSharp');
+    expect(cyberpunkTheme.fonts?.pixel).toContain('Orbitron');
+    expect(corporateTheme.fonts?.pixel).toContain('Inter');
+
+    // All themes preserve original clean Inter font for body/lists
+    expect(undertaleTheme.fonts?.sans).toContain('Inter');
+    expect(spongebobTheme.fonts?.sans).toContain('Inter');
+    expect(academiaTheme.fonts?.sans).toContain('Inter');
+    expect(cyberpunkTheme.fonts?.sans).toContain('Inter');
+    expect(corporateTheme.fonts?.sans).toContain('Inter');
   });
 
   it('undertale theme has complete metadata, archetypes, and quote generators', () => {
@@ -129,6 +153,83 @@ describe('Theme Engine & Registry Tests', () => {
     expect(spongebobTheme.header.levelTitle(2, 'Apprentice')).toBe('Fry Cook');
     expect(spongebobTheme.header.levelTitle(3, 'Journeyman')).toBe('Spatula Master');
     expect(spongebobTheme.header.levelTitle(7, 'Legend')).toBe('Formula Guard');
+  });
+
+  it('academia theme has complete metadata, gothic library archetypes, quotes, and level titles', () => {
+    expect(academiaTheme.name).toBe('Gothic Library');
+    expect(academiaTheme.shortName).toBe('OXFORD');
+    expect(academiaTheme.icon).toBe('🏛️');
+
+    // Labels & archetypes
+    expect(academiaTheme.statusLabels.alive).toBe('✦ OPEN');
+    expect(academiaTheme.statusLabels.dead).toBe('❦ SHELVED');
+    expect(academiaTheme.archetypes.artifact.name).toBe('CODEX');
+    expect(academiaTheme.archetypes.spark.name).toBe('THESIS');
+    expect(academiaTheme.archetypes.mayfly.name).toBe('FOOTNOTE');
+    expect(academiaTheme.archetypes.phantom.name).toBe('GLOSSA');
+
+    // Navigation and actions
+    expect(academiaTheme.nav.graveyard.label).toBe('STACKS');
+    expect(academiaTheme.nav.catacombs.label).toBe('CODICES');
+    expect(academiaTheme.nav.living.label).toBe('DESK');
+    expect(academiaTheme.actions.revive).toBe('RETRIEVE');
+    expect(academiaTheme.actions.purge).toBe('DISCARD');
+    expect(academiaTheme.actions.sweep).toBe('SHELVE');
+    expect(academiaTheme.actions.erect).toBe('BIND');
+
+    // Quotes and levels
+    expect(academiaTheme.quotes.determination(10)).toContain('ERUDITION');
+    expect(academiaTheme.header.levelTitle(1, 'Novice')).toBe('Scribe');
+    expect(academiaTheme.header.levelTitle(8, 'Chancellor')).toBe('Chancellor');
+  });
+
+  it('renders UI components dynamically with Gothic Library theme without any component changes', () => {
+    const headerHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'academia' },
+        React.createElement(Header, {
+          buriedCount: 8,
+          livingCount: 3,
+          levelInfo: { level: 4, title: 'Archivist', currentXp: 30, nextLevelXp: 50, progress: 60 },
+        })
+      )
+    );
+    expect(headerHtml).toContain('OXFORD');
+    expect(headerHtml).toContain('Archivist');
+
+    const navHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'academia' },
+        React.createElement(BattleNav, {
+          activePage: 'graveyard',
+          onSelectPage: () => {},
+          buriedCount: 8,
+          tombstoneCount: 2,
+          livingCount: 3,
+        })
+      )
+    );
+    expect(navHtml).toContain('STACKS');
+    expect(navHtml).toContain('CODICES');
+    expect(navHtml).toContain('DESK');
+
+    const tabHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'academia' },
+        React.createElement(TabItem, {
+          tab: mockTab,
+          isHovered: false,
+          onHover: () => {},
+          actions: mockActions,
+        })
+      )
+    );
+    expect(tabHtml).toContain('RETRIEVE');
+    expect(tabHtml).toContain('DISCARD');
+    expect(tabHtml).toContain('Shelved');
   });
 
   it('tokens.ts maintains backward compatibility for legacy imports', () => {
@@ -251,28 +352,35 @@ describe('Theme Engine & Registry Tests', () => {
     delete THEMES.office;
   });
 
-  it('renders all components and applies custom labels/icons for an arbitrary 3rd theme without any component code changes', () => {
-    const customCyberTheme = {
-      ...undertaleTheme,
-      id: 'cyberpunk',
-      name: 'Night City',
-      shortName: 'CYBER',
-      tagline: 'Wake up, Samurai.',
-      icon: '⚡',
-      labels: {
-        stateDead: 'Flatlined',
-        stateAlive: 'Netrunning',
-        collapseArchetype: 'TO ICE VAULT',
-      },
-      nav: {
-        graveyard: { label: 'SCRAP', tooltip: 'Flatlined neural links' },
-        catacombs: { label: 'ARCHIVE', tooltip: 'Deep freeze ICE vaults' },
-        living:    { label: 'SYNAPSE', tooltip: 'Active neural synapses' },
-      },
-    };
+  it('cyberpunk theme has complete metadata, neo-grid archetypes, quotes, and level progression', () => {
+    expect(cyberpunkTheme.name).toBe('Neo Arcade');
+    expect(cyberpunkTheme.shortName).toBe('CYBER');
+    expect(cyberpunkTheme.icon).toBe('👾');
 
-    THEMES['cyberpunk'] = customCyberTheme;
+    // Labels & archetypes
+    expect(cyberpunkTheme.statusLabels.alive).toBe('⚡ LIVE');
+    expect(cyberpunkTheme.statusLabels.dead).toBe('☠ DUMP');
+    expect(cyberpunkTheme.archetypes.zombie.name).toBe('MALWARE');
+    expect(cyberpunkTheme.archetypes.phantom.name).toBe('GLITCH');
+    expect(cyberpunkTheme.archetypes.artifact.name).toBe('DATA-CORE');
+    expect(cyberpunkTheme.archetypes.spark.name).toBe('OVERCLOCK');
 
+    // Navigation and actions
+    expect(cyberpunkTheme.nav.graveyard.label).toBe('SCRAP');
+    expect(cyberpunkTheme.nav.catacombs.label).toBe('ICE VAULT');
+    expect(cyberpunkTheme.nav.living.label).toBe('SYNAPSE');
+    expect(cyberpunkTheme.actions.revive).toBe('BOOT');
+    expect(cyberpunkTheme.actions.purge).toBe('DELETE');
+    expect(cyberpunkTheme.actions.sweep).toBe('ICE');
+    expect(cyberpunkTheme.actions.erect).toBe('ENCRYPT');
+
+    // Quotes and levels
+    expect(cyberpunkTheme.quotes.determination(15)).toContain('OVERCLOCK');
+    expect(cyberpunkTheme.header.levelTitle(1, 'Novice')).toBe('Script Kiddie');
+    expect(cyberpunkTheme.header.levelTitle(8, 'Deity')).toBe('AI Deity');
+  });
+
+  it('renders UI components dynamically with Cyberpunk theme without any component changes', () => {
     const navHtml = renderToString(
       React.createElement(
         ThemeProvider,
@@ -287,7 +395,7 @@ describe('Theme Engine & Registry Tests', () => {
       )
     );
     expect(navHtml).toContain('SCRAP');
-    expect(navHtml).toContain('ARCHIVE');
+    expect(navHtml).toContain('ICE VAULT');
     expect(navHtml).toContain('SYNAPSE');
 
     const tabHtml = renderToString(
@@ -302,10 +410,118 @@ describe('Theme Engine & Registry Tests', () => {
         })
       )
     );
-    // Custom domain label rendered without modifying TabItem!
+    expect(tabHtml).toContain('BOOT');
+    expect(tabHtml).toContain('DELETE');
     expect(tabHtml).toContain('Flatlined');
+  });
 
-    delete THEMES.cyberpunk;
+  it('corporate theme has clean persona-free metadata, labels, and professional terminology', () => {
+    expect(corporateTheme.name).toBe('Corporate / Clean');
+    expect(corporateTheme.shortName).toBe('WORKSPACE');
+    expect(corporateTheme.icon).toBe('📁');
+
+    // Persona-free status labels
+    expect(corporateTheme.statusLabels.alive).toBe('OPEN');
+    expect(corporateTheme.statusLabels.dead).toBe('CLOSED');
+    expect(corporateTheme.statusLabels.aging).toBe('INACTIVE');
+    expect(corporateTheme.statusLabels.forgotten).toBe('STALE');
+
+    // Domain and navigation
+    expect(corporateTheme.labels.stateDead).toBe('Closed');
+    expect(corporateTheme.labels.stateAlive).toBe('Open');
+    expect(corporateTheme.labels.collapseArchetype).toBe('SAVE TO FOLDER');
+    expect(corporateTheme.nav.graveyard.label).toBe('CLOSED');
+    expect(corporateTheme.nav.catacombs.label).toBe('FOLDERS');
+    expect(corporateTheme.nav.living.label).toBe('OPEN');
+
+    // Professional actions
+    expect(corporateTheme.actions.revive).toBe('RESTORE');
+    expect(corporateTheme.actions.purge).toBe('DELETE');
+    expect(corporateTheme.actions.sweep).toBe('CLOSE');
+    expect(corporateTheme.actions.erect).toBe('SAVE FOLDER');
+    expect(corporateTheme.catacombs.tombstoneSectionTitle).toBe('SAVED FOLDERS');
+    expect(corporateTheme.catacombs.temporalSectionTitle).toBe('CLOSED SESSIONS');
+
+    // Professional quotes and level titles
+    expect(corporateTheme.quotes.clean).toBe('Workspace clean. No open tabs.');
+    expect(corporateTheme.quotes.emptyGraveyard).toBe('No closed tabs in history.');
+    expect(corporateTheme.header.levelTitle(1, 'Novice')).toBe('Tier 1');
+  });
+
+  it('renders UI components dynamically with Corporate / Clean theme', () => {
+    const navHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'corporate' },
+        React.createElement(BattleNav, {
+          activePage: 'graveyard',
+          onSelectPage: () => {},
+          buriedCount: 4,
+          tombstoneCount: 2,
+          livingCount: 6,
+        })
+      )
+    );
+    expect(navHtml).toContain('CLOSED');
+    expect(navHtml).toContain('FOLDERS');
+    expect(navHtml).toContain('OPEN');
+
+    const tabHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'corporate' },
+        React.createElement(TabItem, {
+          tab: mockTab,
+          isHovered: false,
+          onHover: () => {},
+          actions: mockActions,
+        })
+      )
+    );
+    expect(tabHtml).toContain('RESTORE');
+    expect(tabHtml).toContain('DELETE');
+  });
+
+  it('renders all components and applies custom labels/icons for an arbitrary dynamic theme without any component code changes', () => {
+    const customMatrixTheme = {
+      ...undertaleTheme,
+      id: 'matrix_grid',
+      name: 'The Construct',
+      shortName: 'MATRIX',
+      tagline: 'Take the red pill.',
+      icon: '🕶️',
+      labels: {
+        stateDead: 'Decompiled',
+        stateAlive: 'Streaming',
+        collapseArchetype: 'TO MAINFRAME',
+      },
+      nav: {
+        graveyard: { label: 'TRASH', tooltip: 'Decompiled memory buffer' },
+        catacombs: { label: 'CORE', tooltip: 'Encrypted mainframe cores' },
+        living:    { label: 'SOCKETS', tooltip: 'Active network sockets' },
+      },
+    };
+
+    THEMES['matrix_grid'] = customMatrixTheme;
+
+    const navHtml = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { initialThemeId: 'matrix_grid' },
+        React.createElement(BattleNav, {
+          activePage: 'graveyard',
+          onSelectPage: () => {},
+          buriedCount: 4,
+          tombstoneCount: 1,
+          livingCount: 8,
+        })
+      )
+    );
+    expect(navHtml).toContain('TRASH');
+    expect(navHtml).toContain('CORE');
+    expect(navHtml).toContain('SOCKETS');
+
+    delete THEMES.matrix_grid;
   });
 });
 

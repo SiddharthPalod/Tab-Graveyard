@@ -16,6 +16,8 @@ import type { TombstoneTabItem } from './db';
 export function generateTombstoneTitle(tabs: TombstoneTabItem[]): string {
   if (!tabs || tabs.length === 0) return 'Empty Tombstone';
 
+  const total = tabs.length;
+
   // Count domain frequencies
   const domainCounts: Record<string, number> = {};
   for (const tab of tabs) {
@@ -27,15 +29,12 @@ export function generateTombstoneTitle(tabs: TombstoneTabItem[]): string {
     (a, b) => domainCounts[b] - domainCounts[a],
   );
 
-  const total = tabs.length;
-  const unit = total === 1 ? 'tab' : 'tabs';
-
   if (sortedDomains.length === 1) {
-    return `${sortedDomains[0]} Rabbit Hole (${total} ${unit})`;
+    return `${sortedDomains[0]} Rabbit Hole`;
   }
 
   if (sortedDomains.length === 2) {
-    return `${sortedDomains[0]} & ${sortedDomains[1]} (${total} ${unit})`;
+    return `${sortedDomains[0]} & ${sortedDomains[1]}`;
   }
 
   const topDomain = sortedDomains[0];
@@ -43,8 +42,8 @@ export function generateTombstoneTitle(tabs: TombstoneTabItem[]): string {
 
   // If top domain represents 50%+ of tabs
   if (topCount >= Math.ceil(total / 2)) {
-    return `${topDomain} & Others (${total} ${unit})`;
+    return `${topDomain} & Others`;
   }
 
-  return `Underground Research (${total} ${unit})`;
+  return 'Underground Research';
 }

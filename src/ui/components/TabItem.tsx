@@ -82,7 +82,7 @@ export const TabItem: React.FC<TabItemProps> = ({
 
           <div className="min-w-0 flex-1">
             <h2
-              className={`font-sans text-[12.5px] font-medium leading-snug truncate ${
+              className={`font-sans text-[12px] font-medium leading-snug truncate ${
                 isSelected
                   ? 'text-rpg-yellow font-semibold'
                   : 'text-rpg-white'
@@ -92,7 +92,7 @@ export const TabItem: React.FC<TabItemProps> = ({
               {tab.title || 'Untitled Encounter'}
             </h2>
 
-            <p className="font-sans text-[10.5px] text-rpg-light-gray truncate">
+            <p className="font-sans text-[9.5px] text-rpg-light-gray truncate">
               <span className="text-rpg-white/90 font-normal">
                 {tab.domain || 'local'}
               </span>

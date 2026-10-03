@@ -44,20 +44,20 @@ export const ThemeSelector: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="font-pixel text-[7px] px-1.5 py-0.5 border border-rpg-border hover:border-rpg-yellow bg-rpg-surface text-rpg-yellow hover:text-rpg-white cursor-pointer inline-flex items-center gap-1 transition-all rounded-none shadow-pixel-hover"
+        className="font-pixel text-[8px] px-1.5 py-0.5 border border-rpg-border hover:border-rpg-yellow bg-rpg-surface text-rpg-yellow hover:text-rpg-white cursor-pointer inline-flex items-center gap-1 transition-all rounded-none shadow-pixel-hover"
         title="Change theme personality"
         aria-expanded={isOpen}
       >
-        <span>{theme.icon}</span>
-        <span className="text-[6.5px] tracking-tight">{shortName}</span>
-        <span className="text-[6px] opacity-70 leading-none">{isOpen ? '▲' : '▼'}</span>
+        <span className="text-[9px] leading-none">{theme.icon}</span>
+        <span className="text-[8px] tracking-tight leading-none">{shortName}</span>
+        <span className="text-[6.5px] opacity-75 leading-none">{isOpen ? '▲' : '▼'}</span>
       </button>
 
       {/* Floating Dropdown Menu */}
       {isOpen && (
         <div className="absolute left-0 mt-1 w-44 bg-rpg-dark-gray border border-rpg-border shadow-pixel z-50 py-1 text-left">
           <div className="px-2 py-1 border-b border-rpg-border/60 flex items-center justify-between">
-            <span className="font-pixel text-[6.5px] text-rpg-light-gray uppercase tracking-wider">
+            <span className="font-pixel text-[8px] text-rpg-light-gray uppercase tracking-wider">
               THEMES ({availableThemes.length})
             </span>
           </div>
@@ -82,16 +82,16 @@ export const ThemeSelector: React.FC = () => {
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span className="text-xs shrink-0">{t.icon}</span>
                     <div className="min-w-0">
-                      <p className="font-pixel text-[7.5px] truncate leading-tight">
+                      <p className="font-pixel text-[9.5px] truncate leading-tight">
                         {t.name}
                       </p>
-                      <p className="font-sans text-[9.5px] text-rpg-light-gray/80 truncate leading-tight mt-0.5">
+                      <p className="font-sans text-[10.5px] text-rpg-light-gray/80 truncate leading-tight mt-0.5">
                         {t.tagline}
                       </p>
                     </div>
                   </div>
                   {isSelected && (
-                    <span className="font-pixel text-[7px] text-rpg-yellow ml-1 shrink-0">
+                    <span className="font-pixel text-[8px] text-rpg-yellow ml-1 shrink-0">
                       ✔
                     </span>
                   )}

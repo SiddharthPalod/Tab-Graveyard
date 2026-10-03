@@ -6,6 +6,8 @@ import type { TabActions } from '../../store/useTabs';
 import type { TopicCluster, GraveyardLocalStats } from '../../core/topicUtils';
 import { TypewriterText } from '../components/RPGPrimitives';
 import { useTheme } from '../themes/useTheme';
+import { useSmartAI } from '../hooks/useSmartAI';
+import { inferSmartSessionTitle } from '../../core/ai';
 
 interface GraveyardPageProps {
   tabs: TabViewModel[];
@@ -52,9 +54,24 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
   const PurgeIcon = theme.icons.purge;
   const CremateIcon = theme.icons.cremate;
 
+  const { isAiAvailable } = useSmartAI();
   const [selectedUrls, setSelectedUrls] = useState<Record<string, boolean>>({});
   const [namingOpen, setNamingOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
+  const [isAiNaming, setIsAiNaming] = useState(false);
+
+  const handleAiName = async () => {
+    if (selectedTabs.length === 0) return;
+    setIsAiNaming(true);
+    try {
+      const res = await inferSmartSessionTitle(selectedTabs);
+      if (res.title) setCustomTitle(res.title);
+    } catch {
+      // Ignored
+    } finally {
+      setIsAiNaming(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -71,7 +88,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
           <EmptyGraveyardIcon className="text-4xl text-rpg-mid-gray" />
         </div>
 
-        <p className="text-slate-200 font-sans text-xs">
+        <p className="text-rpg-white font-sans text-xs">
           <TypewriterText text={searchQuery ? theme.quotes.noResults : theme.quotes.emptyGraveyard} />
         </p>
 
@@ -137,6 +154,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
           topics={topics}
           stats={stats}
           actions={actions}
+          allBuriedTabs={tabs}
         />
       )}
 
@@ -164,6 +182,18 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
                 className="flex-1 min-w-0 bg-rpg-bg border border-rpg-border font-sans text-xs px-2 py-1.5 text-rpg-white outline-none placeholder:text-rpg-mid-gray"
                 autoFocus
               />
+
+              {isAiAvailable && (
+                <button
+                  type="button"
+                  onClick={handleAiName}
+                  disabled={isAiNaming}
+                  className="flex items-center gap-1 px-2 py-1.5 text-[8px] font-pixel text-rpg-yellow bg-rpg-surface border border-rpg-yellow/50 hover:bg-rpg-yellow/20 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                  title="Auto-generate title with Gemini Nano"
+                >
+                  <span>✨ {isAiNaming ? 'THINKING...' : 'AI NAME'}</span>
+                </button>
+              )}
 
               <button
                 onClick={handleConfirmBundle}
@@ -212,7 +242,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
 
                   <button
                     onClick={handlePurgeSelected}
-                    className="font-pixel text-[8px] bg-rose-900/90 hover:bg-rose-700 text-rose-100 border border-rose-500/50 px-2.5 py-1.5 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shrink-0 shadow-pixel"
+                    className={theme.cls.btn.danger}
                     title={theme.actions.purgeTooltip}
                   >
                     <PurgeIcon className="text-xs shrink-0" />
@@ -255,7 +285,7 @@ export const GraveyardPage: React.FC<GraveyardPageProps> = ({
               <button
                 onClick={handleCremate}
                 disabled={cremateCount === 0}
-                className={`font-pixel text-[8px] px-3 py-1.5 uppercase inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 transition-all ${cremateCount === 0 ? 'bg-rose-950/40 text-rose-300/40 border border-rose-950/40 cursor-not-allowed' : 'bg-rose-900/90 hover:bg-rose-700 text-rose-100 border border-rose-500/50 shadow-pixel cursor-pointer'}`}
+                className={cremateCount === 0 ? 'font-pixel text-[8px] px-3 py-1.5 uppercase inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 opacity-40 cursor-not-allowed border border-rpg-border text-rpg-light-gray' : theme.cls.btn.danger}
                 title={cremateCount === 0 ? `All ${totalDead} dead tabs are retained because KEEP is set to ${keepCount}. Click ALL or lower KEEP to 0 to cremate them.` : `Keep the newest ${keepCount} tabs, delete the oldest ${cremateCount} tabs (${cremateCount}/${totalDead})`}
               >
                 <CremateIcon className="text-xs shrink-0" />

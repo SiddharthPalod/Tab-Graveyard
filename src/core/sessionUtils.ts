@@ -15,6 +15,21 @@ export interface TemporalSession {
 }
 
 /**
+ * Generates a deterministic content hash for a set of tabs.
+ * Ensures AI-cached titles persist reliably even across time window shifts.
+ */
+export function getSessionHash(tabs: { cleanUrl: string }[]): string {
+  if (!tabs || tabs.length === 0) return 'empty_session';
+  const sorted = tabs.map((t) => t.cleanUrl).sort().join('|');
+  let hash = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    hash = (hash << 5) - hash + sorted.charCodeAt(i);
+    hash |= 0;
+  }
+  return `hash_${Math.abs(hash)}`;
+}
+
+/**
  * Clusters dead tabs into temporal sessions.
  * Tabs closed within `windowMs` (default 15 minutes) of each other with >= 2 tabs
  * form a recognizable Temporal Session (e.g. mass browser close or research sprint).
