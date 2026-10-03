@@ -1,8 +1,70 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemeId, ThemePersonality } from './types';
 import { THEMES, DEFAULT_THEME_ID, getTheme, registerTheme as globalRegisterTheme } from './index';
+import { db } from '../../core/db';
 
 const STORAGE_THEME_KEY = 'tabGraveyardTheme';
+
+// Synchronous initial fallback check to prevent flash of wrong theme on startup
+function getInitialThemeId(initialThemeId?: ThemeId): ThemeId {
+  if (initialThemeId && initialThemeId in THEMES) {
+    return initialThemeId;
+  }
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_THEME_KEY);
+      if (stored && stored in THEMES) {
+        return stored as ThemeId;
+      }
+    } catch {
+      // Ignore storage access error in restricted sandbox
+    }
+  }
+  return DEFAULT_THEME_ID;
+}
+
+/**
+ * Multi-tier bulletproof theme persistence:
+ * 1. Synchronous localStorage (instant frame-0 load)
+ * 2. chrome.storage.sync (survives rebuilds, extension updates, and Google account sync)
+ * 3. chrome.storage.local (fast local disk cache)
+ * 4. IndexedDB via Dexie (persists identically to tabs/tombstones across releases)
+ */
+export async function persistThemePreference(id: ThemeId): Promise<void> {
+  // 1. Synchronous localStorage (instant frame-0 load)
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_THEME_KEY, id);
+    } catch {
+      // Ignore
+    }
+  }
+
+  // 2. Chrome Storage Sync (cross-device & survives all rebuilds/updates)
+  if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
+    try {
+      await chrome.storage.sync.set({ [STORAGE_THEME_KEY]: id });
+    } catch {
+      // Ignore
+    }
+  }
+
+  // 3. Chrome Storage Local
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    try {
+      await chrome.storage.local.set({ [STORAGE_THEME_KEY]: id });
+    } catch {
+      // Ignore
+    }
+  }
+
+  // 4. Dexie IndexedDB (indestructible across extension updates)
+  try {
+    await db.setAICache('theme:preference', id);
+  } catch {
+    // Ignore
+  }
+}
 
 interface ThemeContextValue {
   theme:           ThemePersonality;
@@ -28,7 +90,7 @@ export const ThemeProvider: React.FC<{
   initialThemeId?: ThemeId;
   children:        React.ReactNode;
 }> = ({ initialThemeId, children }) => {
-  const [themeId, setThemeIdState] = useState<ThemeId>(initialThemeId || DEFAULT_THEME_ID);
+  const [themeId, setThemeIdState] = useState<ThemeId>(() => getInitialThemeId(initialThemeId));
   const [themesMap, setThemesMap]  = useState<Record<string, ThemePersonality>>({ ...THEMES });
 
   // Pure dynamic DOM injection: sets CSS variables directly from theme.palette
@@ -95,47 +157,112 @@ export const ThemeProvider: React.FC<{
     }
   }, []);
 
-  // Initial load from chrome storage or localStorage
+  // Sync to DOM immediately whenever active themeId changes
   useEffect(() => {
     const current = themesMap[themeId] || getTheme(themeId);
     applyThemeToDom(current);
+  }, [applyThemeToDom, themeId, themesMap]);
 
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.get([STORAGE_THEME_KEY], (res) => {
-        if (res && res[STORAGE_THEME_KEY] && res[STORAGE_THEME_KEY] in themesMap) {
-          const loadedId = res[STORAGE_THEME_KEY] as ThemeId;
-          setThemeIdState(loadedId);
-          applyThemeToDom(themesMap[loadedId]);
+  // Robust multi-tier async restoration on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    // If an explicit initialThemeId prop was provided (e.g. in test or storybook), honor it
+    if (initialThemeId && initialThemeId in themesMap) {
+      return;
+    }
+
+    const restoreTheme = async () => {
+      // Tier 1: Check chrome.storage.sync (highest durability, survives rebuilds/updates)
+      if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
+        try {
+          const syncRes = await new Promise<{ [key: string]: any }>((resolve) => {
+            chrome.storage.sync.get([STORAGE_THEME_KEY], resolve);
+          });
+          const syncId = syncRes?.[STORAGE_THEME_KEY] as ThemeId;
+          if (syncId && syncId in themesMap && isMounted) {
+            setThemeIdState(syncId);
+            persistThemePreference(syncId);
+            return;
+          }
+        } catch {
+          // Fall through
         }
-      });
-    } else if (typeof localStorage !== 'undefined') {
+      }
+
+      // Tier 2: Check chrome.storage.local
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        try {
+          const localRes = await new Promise<{ [key: string]: any }>((resolve) => {
+            chrome.storage.local.get([STORAGE_THEME_KEY], resolve);
+          });
+          const localId = localRes?.[STORAGE_THEME_KEY] as ThemeId;
+          if (localId && localId in themesMap && isMounted) {
+            setThemeIdState(localId);
+            persistThemePreference(localId);
+            return;
+          }
+        } catch {
+          // Fall through
+        }
+      }
+
+      // Tier 3: Check IndexedDB (Dexie aiCache table)
       try {
-        const stored = localStorage.getItem(STORAGE_THEME_KEY) as ThemeId | null;
-        if (stored && stored in themesMap) {
-          setThemeIdState(stored);
-          applyThemeToDom(themesMap[stored]);
+        const dbId = await db.getAICache<string>('theme:preference');
+        if (dbId && dbId in themesMap && isMounted) {
+          setThemeIdState(dbId as ThemeId);
+          persistThemePreference(dbId as ThemeId);
+          return;
         }
       } catch {
-        // Ignore localStorage error in sandboxed environment
+        // Fall through
       }
+
+      // Tier 4: Check localStorage
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const stored = localStorage.getItem(STORAGE_THEME_KEY) as ThemeId | null;
+          if (stored && stored in themesMap && isMounted) {
+            setThemeIdState(stored);
+            persistThemePreference(stored);
+            return;
+          }
+        } catch {
+          // Fall through
+        }
+      }
+    };
+
+    restoreTheme();
+
+    // Listen to chrome.storage changes so multiple popups / windows stay in sync
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      const listener = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+        if ((area === 'sync' || area === 'local') && changes[STORAGE_THEME_KEY]) {
+          const newId = changes[STORAGE_THEME_KEY].newValue as ThemeId;
+          if (newId && newId in themesMap && isMounted) {
+            setThemeIdState(newId);
+          }
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      return () => {
+        isMounted = false;
+        chrome.storage.onChanged.removeListener(listener);
+      };
     }
-  }, [applyThemeToDom, themeId, themesMap]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialThemeId, themesMap]);
 
   const setThemeId = useCallback((id: ThemeId) => {
     if (!(id in themesMap)) return;
     setThemeIdState(id);
-    applyThemeToDom(themesMap[id]);
-
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.set({ [STORAGE_THEME_KEY]: id });
-    } else if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem(STORAGE_THEME_KEY, id);
-      } catch {
-        // Ignore
-      }
-    }
-  }, [applyThemeToDom, themesMap]);
+    persistThemePreference(id);
+  }, [themesMap]);
 
   const registerTheme = useCallback((newTheme: ThemePersonality) => {
     globalRegisterTheme(newTheme);

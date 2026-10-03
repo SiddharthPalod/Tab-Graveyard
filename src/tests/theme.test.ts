@@ -523,5 +523,37 @@ describe('Theme Engine & Registry Tests', () => {
 
     delete THEMES.matrix_grid;
   });
+
+  it('persistThemePreference writes across localStorage, chrome.storage.sync, and chrome.storage.local', async () => {
+    const { persistThemePreference } = await import('../ui/themes/useTheme');
+
+    // Mock chrome storage for the test environment
+    const fakeSync: Record<string, any> = {};
+    const fakeLocal: Record<string, any> = {};
+    (globalThis as any).chrome = {
+      storage: {
+        sync: {
+          set: (obj: any) => Object.assign(fakeSync, obj),
+          get: (keys: string[], cb: Function) => cb(fakeSync),
+        },
+        local: {
+          set: (obj: any) => Object.assign(fakeLocal, obj),
+          get: (keys: string[], cb: Function) => cb(fakeLocal),
+        },
+      },
+    };
+
+    localStorage.clear();
+    await persistThemePreference('spongebob');
+
+    // 1. Verify synchronous localStorage write (instant frame-0 load)
+    expect(localStorage.getItem('tabGraveyardTheme')).toBe('spongebob');
+
+    // 2. Verify chrome.storage.sync write (survives rebuilds, updates, and cross-device sync)
+    expect(fakeSync['tabGraveyardTheme']).toBe('spongebob');
+
+    // 3. Verify chrome.storage.local write
+    expect(fakeLocal['tabGraveyardTheme']).toBe('spongebob');
+  });
 });
 
